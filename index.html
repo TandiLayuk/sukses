@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Manajemen Jadwal Pribadi - Pro & Animatif</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #09090b 0%, #18181b 50%, #27272a 100%);
+            --accent-color: #10b981;
+            --dark-bg: #09090b;
+            --card-bg: rgba(24, 24, 27, 0.88);
+            --border-color: rgba(255, 255, 255, 0.12);
+            --global-zoom: 0.7;
+        }
+
+        body.theme-neon { --primary-gradient: linear-gradient(135deg, #18181b 0%, #064e3b 50%, #022c22 100%); --accent-color: #34d399; }
+        body.theme-cyber { --primary-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%); --accent-color: #8b5cf6; }
+        body.theme-sunset { --primary-gradient: linear-gradient(135deg, #1c1917 0%, #431407 50%, #7c2d12 100%); --accent-color: #fb923c; }
+        body.theme-deepspace { --primary-gradient: linear-gradient(135deg, #030712 0%, #082f49 50%, #0c4a6e 100%); --accent-color: #38bdf8; }
+        body.theme-darkrose { --primary-gradient: linear-gradient(135deg, #111827 0%, #4c0519 100%); --accent-color: #fb7185; }
+        body.theme-midnight { --primary-gradient: linear-gradient(135deg, #000000 0%, #111827 100%); --accent-color: #6366f1; }
+        body.theme-gold { --primary-gradient: linear-gradient(135deg, #1c1917 0%, #78350f 100%); --accent-color: #fbbf24; }
+        body.theme-ruby { --primary-gradient: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%); --accent-color: #f87171; }
+        body.theme-cyan { --primary-gradient: linear-gradient(135deg, #083344 0%, #164e63 100%); --accent-color: #22d3ee; }
+        body.theme-forest { --primary-gradient: linear-gradient(135deg, #064e3b 0%, #022c22 100%); --accent-color: #059669; }
+        body.theme-flame { --primary-gradient: linear-gradient(135deg, #7c2d12 0%, #9a3412 100%); --accent-color: #fdba74; }
+        body.theme-amethyst { --primary-gradient: linear-gradient(135deg, #581c87 0%, #6b21a8 100%); --accent-color: #c084fc; }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 5px var(--accent-color); }
+            50% { box-shadow: 0 0 20px var(--accent-color); }
+            100% { box-shadow: 0 0 5px var(--accent-color); }
+        }
+
+        @keyframes activeGlow {
+            0% { box-shadow: 0 0 10px #ef4444; border-color: #ef4444; transform: scale(1); }
+            50% { box-shadow: 0 0 25px #ef4444; border-color: #f87171; transform: scale(1.02); }
+            100% { box-shadow: 0 0 10px #ef4444; border-color: #ef4444; transform: scale(1); }
+        }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.2; }
+            50% { transform: translateY(-120px) translateX(40px) scale(1.5); opacity: 0.6; }
+            100% { transform: translateY(-250px) translateX(-30px) scale(0.8); opacity: 0; }
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(-45deg, #09090b, #18181b, #0f172a, #111827);
+            background-size: 400% 400%;
+            animation: gradientAnimation 15s ease infinite;
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Widget Jam Mengambang yang Bisa Digeser (Draggable) */
+        .floating-clock-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1080;
+            background: rgba(24, 24, 27, 0.95);
+            backdrop-filter: blur(12px);
+            border: 2px solid var(--accent-color);
+            border-radius: 16px;
+            padding: 10px 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: pulseGlow 3s infinite;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+        .floating-clock-widget:active {
+            cursor: grabbing;
+        }
+        .floating-clock-widget .time-text {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 1px;
+            font-family: monospace;
+        }
+        .floating-clock-widget .date-text {
+            font-size: 0.65rem;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .timeline-item.active-now {
+            border-left: 5px solid #ef4444 !important;
+            background: rgba(239, 68, 68, 0.08) !important;
+            animation: activeGlow 2s infinite;
+            border-radius: 4px 12px 12px 4px;
+            padding-left: 16px;
+        }
+
+        #appZoomWrapper {
+            zoom: var(--global-zoom);
+            -moz-transform: scale(var(--global-zoom));
+            -moz-transform-origin: top center;
+            transition: zoom 0.15s ease-in-out;
+        }
+
+        .particle-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .particle {
+            position: absolute;
+            bottom: -20px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            animation: particleFloat 8s infinite ease-in-out;
+            opacity: 0.3;
+        }
+        .particle:nth-child(1) { left: 10%; width: 6px; height: 6px; animation-duration: 7s; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 25%; width: 4px; height: 4px; animation-duration: 9s; animation-delay: 2s; }
+        .particle:nth-child(3) { left: 40%; width: 8px; height: 8px; animation-duration: 6s; animation-delay: 1s; }
+        .particle:nth-child(4) { left: 60%; width: 5px; height: 5px; animation-duration: 10s; animation-delay: 3s; }
+        .particle:nth-child(5) { left: 75%; width: 7px; height: 7px; animation-duration: 8s; animation-delay: 1.5s; }
+        .particle:nth-child(6) { left: 90%; width: 4px; height: 4px; animation-duration: 7s; animation-delay: 4s; }
+
+        .hero-header, .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-header {
+            background: var(--primary-gradient);
+            background-size: 200% 200%;
+            animation: gradientAnimation 10s ease infinite;
+            color: #ffffff;
+            padding: 2rem 1rem 2.5rem;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            z-index: 1050;
+        }
+
+        .hero-header .dropdown {
+            position: relative;
+            z-index: 1060;
+        }
+        .hero-header .dropdown-menu {
+            z-index: 1070 !important;
+        }
+
+        .card-custom {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-theme {
+            background-color: var(--accent-color);
+            color: #ffffff;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-theme:hover { 
+            opacity: 0.9; 
+            transform: translateY(-2px); 
+            color: #ffffff; 
+            box-shadow: 0 5px 20px var(--accent-color);
+        }
+
+        .nav-pills {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 6px;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+        .nav-pills::-webkit-scrollbar { display: none; }
+        .nav-pills .nav-link {
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: 0.75rem;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            padding: 6px 10px;
+            white-space: nowrap;
+            transition: all 0.25s;
+        }
+        @media (min-width: 768px) {
+            .nav-pills .nav-link { font-size: 0.85rem; padding: 10px 16px; }
+            .nav-pills { flex-wrap: wrap; overflow-x: visible; }
+        }
+        .nav-pills .nav-link.active {
+            background-color: var(--accent-color) !important;
+            color: #fff !important;
+            box-shadow: 0 4px 20px var(--accent-color);
+            animation: pulseGlow 3s infinite;
+        }
+
+        .calendar-scroll-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 520px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-color) transparent;
+        }
+        .calendar-scroll-wrapper::-webkit-scrollbar { width: 6px; height: 6px; }
+        .calendar-scroll-wrapper::-webkit-scrollbar-thumb { background-color: var(--accent-color); border-radius: 10px; }
+
+        .calendar-inner-container {
+            min-width: 650px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 6px;
+        }
+        .calendar-day-header {
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            padding-bottom: 5px;
+        }
+        .calendar-cell {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            min-height: 105px;
+            padding: 6px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .calendar-cell:hover {
+            border-color: var(--accent-color);
+            background-color: rgba(255, 255, 255, 0.06);
+        }
+        .calendar-cell.has-event {
+            border-left: 4px solid var(--accent-color);
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+        .calendar-date-num {
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #f1f5f9;
+        }
+        .empty-day-icon {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+        .add-btn-cell {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 18px;
+            height: 18px;
+            background: rgba(255,255,255,0.1);
+            color: #cbd5e1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            opacity: 0;
+            transition: 0.2s;
+        }
+        .calendar-cell:hover .add-btn-cell {
+            opacity: 1;
+            background: var(--accent-color);
+            color: #ffffff;
+        }
+        
+        /* Tampilan Ikon Ringkas di Kotak Kalender */
+        .calendar-icons-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            margin-top: 4px;
+            max-height: 55px;
+            overflow: hidden;
+        }
+        .calendar-icon-pill {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+        .calendar-icon-pill:hover {
+            transform: scale(1.2);
+        }
+
+        .timeline-item {
+            border-left: 3px solid var(--accent-color);
+            padding-left: 14px;
+            position: relative;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            border-radius: 0 12px 12px 0;
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+        .timeline-item:hover {
+            transform: translateX(4px);
+            background: rgba(255,255,255,0.02);
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -6.5px;
+            top: 10px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-color);
+            animation: pulseGlow 2s infinite;
+        }
+
+        .badge-category {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+            max-height: 180px;
+            overflow-y: auto;
+            padding: 8px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-color) transparent;
+        }
+        .icon-option {
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            color: #cbd5e1;
+            transition: 0.2s;
+        }
+        .icon-option:hover, .icon-option.selected {
+            background-color: var(--accent-color);
+            color: #ffffff;
+            border-color: var(--accent-color);
+        }
+
+        .color-dot {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: 0.2s;
+        }
+        .color-dot.selected {
+            border-color: #ffffff;
+            transform: scale(1.15);
+        }
+
+        .progress-custom {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar-anim {
+            background: var(--accent-color);
+            transition: width 1s ease-in-out;
+        }
+
+        .modal-content {
+            background: #18181b !important;
+            color: #f8fafc !important;
+            border: 1px solid var(--border-color) !important;
+        }
+
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(9, 9, 11, 0.9); z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+        }
+    </style>
+</head>
+<body class="theme-neon">
+
+    <!-- Widget Jam Mengambang Draggable (Bisa Digeser) -->
+    <div class="floating-clock-widget" id="floatingClockWidget">
+        <div class="text-success fs-4"><i class="fas fa-clock fa-spin" style="animation-duration: 10s;"></i></div>
+        <div>
+            <div class="time-text" id="floatingWitaClock">00:00:00 WITA</div>
+            <div class="date-text" id="floatingWitaDate">Memuat Tanggal...</div>
+        </div>
+    </div>
+
+    <div class="particle-container">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="text-center">
+            <div class="spinner-border text-light mb-2" role="status"></div>
+            <p class="fw-bold text-light small mb-0">Memuat Sistem Kreatif...</p>
+        </div>
+    </div>
+
+    <div id="appZoomWrapper">
+
+        <!-- Hero Header -->
+        <div class="hero-header">
+            <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <div>
+                    <span class="badge bg-white text-dark fw-bold px-3 py-1 rounded-pill mb-2 shadow-sm" style="font-size: 0.7rem;">
+                        <i class="fas fa-calendar-check me-1"></i> Manajemen Jadwal Hierarkis & Target
+                    </span>
+                    <h1 class="fw-extrabold mb-1 fs-4 fs-md-2">Agenda & Proyek Pribadi</h1>
+                    <p class="text-white-50 mb-0 small" style="font-size: 0.75rem;">Harian ➔ Mingguan ➔ Bulanan ➔ Tahunan & Proyek Multi-Hari</p>
+                </div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <!-- Tombol Tes Kirim WA Instan ke Nomor Cadangan -->
+                    <button class="btn btn-warning btn-sm fw-bold rounded-pill px-3 shadow-sm text-dark" onclick="testSendWhatsAppManually()">
+                        <i class="fas fa-paper-plane me-1"></i> Tes Kirim ke No. Cadangan
+                    </button>
+
+                    <div class="d-flex align-items-center gap-1 bg-dark bg-opacity-75 p-1 rounded-pill border border-secondary shadow-sm">
+                        <span class="text-light small px-1 fw-bold" style="font-size: 0.7rem;"><i class="fas fa-search me-1"></i>Zoom:</span>
+                        <button class="btn btn-outline-light btn-sm py-0 px-2 rounded-pill" onclick="adjustGlobalZoom(-0.1)" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                        <button class="btn btn-outline-light btn-sm py-0 px-2 rounded-pill" onclick="resetGlobalZoom()" title="Reset"><i class="fas fa-redo-alt"></i></button>
+                        <button class="btn btn-outline-light btn-sm py-0 px-2 rounded-pill" onclick="adjustGlobalZoom(0.1)" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="btn btn-dark btn-sm fw-bold dropdown-toggle rounded-pill px-3 shadow-sm border border-secondary" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-palette me-1"></i> Tema
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow border border-secondary rounded-3 p-2" style="max-height: 250px; overflow-y: auto;">
+                            <li><a class="dropdown-item rounded py-1.5 small" href="#" onclick="setTheme('theme-neon')"><i class="fas fa-circle text-success me-2"></i>Neon Emerald</a></li>
+                            <li><a class="dropdown-item rounded py-1.5 small" href="#" onclick="setTheme('theme-cyber')"><i class="fas fa-circle me-2" style="color: #8b5cf6;"></i>Cyber Purple</a></li>
+                            <li><a class="dropdown-item rounded py-1.5 small" href="#" onclick="setTheme('theme-sunset')"><i class="fas fa-circle me-2" style="color: #fb923c;"></i>Dark Sunset</a></li>
+                            <li><a class="dropdown-item rounded py-1.5 small" href="#" onclick="setTheme('theme-deepspace')"><i class="fas fa-circle me-2" style="color: #38bdf8;"></i>Deep Space Blue</a></li>
+                            <li><a class="dropdown-item rounded py-1.5 small" href="#" onclick="setTheme('theme-darkrose')"><i class="fas fa-circle me-2" style="color: #fb7185;"></i>Dark Rose</a></li>
+                            <li><a class="dropdown-item rounded py-1.5 small" href="#" onclick="setTheme('theme-midnight')"><i class="fas fa-circle me-2" style="color: #6366f1;"></i>Midnight Black</a></li>
+                            <li><a class="dropdown-item rounded py-1.5 small" href="#" onclick="setTheme('theme-gold')"><i class="fas fa-circle me-2" style="color: #fbbf24;"></i>Royal Gold</a></li>
+                            <li><a class="dropdown-item rounded py-1.5 small" href="#" onclick="setTheme('theme-ruby')"><i class="fas fa-circle me-2" style="color: #f87171;"></i>Crimson Ruby</a></li>
+                            <li><a class="dropdown-item rounded py-1.5 small" href="#" onclick="setTheme('theme-cyan')"><i class="fas fa-circle me-2" style="color: #22d3ee;"></i>Electric Cyan</a></li>
+                            <li><a class="dropdown-item rounded py-1.5 small" href="#" onclick="setTheme('theme-forest')"><i class="fas fa-circle me-2" style="color: #059669;"></i>Forest Emerald</a></li>
+                            <li><a class="dropdown-item rounded py-1.5 small" href="#" onclick="setTheme('theme-flame')"><i class="fas fa-circle me-2" style="color: #fdba74;"></i>Sunset Flame</a></li>
+                            <li><a class="dropdown-item rounded py-1.5 small" href="#" onclick="setTheme('theme-amethyst')"><i class="fas fa-circle me-2" style="color: #c084fc;"></i>Amethyst Glow</a></li>
+                        </ul>
+                    </div>
+                    <button class="btn btn-light fw-bold shadow-sm rounded-pill px-3 py-2 btn-sm text-dark" data-bs-toggle="modal" data-bs-target="#modalJadwal" onclick="prepareAddModal()">
+                        <i class="fas fa-plus-circle me-1 text-success"></i> Tambah
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mt-4">
+            
+            <div id="alertBox" class="alert alert-success d-none shadow-sm mb-3">
+                <i class="fas fa-check-circle me-2"></i><span id="alertMessage">Berhasil memperbarui data!</span>
+            </div>
+
+            <div class="card-custom p-3 mb-3">
+                <div class="d-flex flex-column gap-2">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-1">
+                            <button class="btn btn-outline-light btn-sm px-2 py-1 rounded-pill" onclick="shiftMonth(-1)" title="Bulan Sebelumnya"><i class="fas fa-chevron-left"></i></button>
+                            <select class="form-select form-select-sm fw-bold rounded-pill px-2 bg-dark text-light border-secondary" id="filterMonth" onchange="renderApp()" style="max-width: 120px; font-size: 0.8rem;">
+                                <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                                <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                                <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                                <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                            </select>
+                            <input type="number" class="form-control form-control-sm fw-bold text-center rounded-pill bg-dark text-light border-secondary" id="filterYear" onchange="renderApp()" value="2026" style="max-width: 80px; font-size: 0.8rem;">
+                            <button class="btn btn-outline-light btn-sm px-2 py-1 rounded-pill" onclick="shiftMonth(1)" title="Bulan Berikutnya"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                        <div>
+                            <button class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-semibold" style="font-size: 0.78rem;" onclick="cleanExpiredSchedules()">
+                                <i class="fas fa-broom me-1"></i> Bersihkan Lewat
+                            </button>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 pt-1 border-top border-secondary border-opacity-25">
+                        <span class="text-secondary small text-nowrap" style="font-size: 0.75rem;"><i class="fas fa-calendar-day me-1"></i> Lompat Tanggal:</span>
+                        <input type="date" id="quickDateJump" class="form-control form-control-sm rounded-pill bg-dark text-light border-secondary px-2" style="max-width: 150px; font-size: 0.78rem;" onchange="jumpToDateView(this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <ul class="nav nav-pills mb-3 justify-content-center" id="viewTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-calendar-btn" data-bs-toggle="pill" data-bs-target="#viewCalendar" type="button"><i class="fas fa-calendar-alt me-1"></i> Kalender</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-daily-btn" data-bs-toggle="pill" data-bs-target="#viewDaily" type="button"><i class="fas fa-clock me-1"></i> Harian & Konflik</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-projects-btn" data-bs-toggle="pill" data-bs-target="#viewProjects" type="button"><i class="fas fa-tasks me-1"></i> Proyek Panjang</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-categories-btn" data-bs-toggle="pill" data-bs-target="#viewCategories" type="button"><i class="fas fa-layer-group me-1"></i> Kategori</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="viewTabContent">
+                <div class="tab-pane fade" id="viewCalendar" role="tabpanel">
+                    <div class="card-custom p-3 p-md-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="fw-bold text-light mb-0 fs-5" id="calendarTitle">Kalender Bulan</h4>
+                            <span class="badge bg-success px-3 py-1.5 rounded-pill small" id="totalMonthEvents">0 Agenda</span>
+                        </div>
+                        <div class="calendar-scroll-wrapper">
+                            <div class="calendar-inner-container">
+                                <div class="calendar-grid mb-2">
+                                    <div class="calendar-day-header text-danger">Min</div>
+                                    <div class="calendar-day-header">Sen</div>
+                                    <div class="calendar-day-header">Sel</div>
+                                    <div class="calendar-day-header">Rab</div>
+                                    <div class="calendar-day-header">Kam</div>
+                                    <div class="calendar-day-header">Jum</div>
+                                    <div class="calendar-day-header">Sab</div>
+                                </div>
+                                <div class="calendar-grid" id="calendarDaysGrid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade show active" id="viewDaily" role="tabpanel">
+                    <div class="card-custom p-3 p-md-4">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                            <h4 class="fw-bold text-light mb-0 fs-5"><i class="fas fa-list-ul text-success me-2"></i> Rincian Jam Harian & Konflik Bertumpuk</h4>
+                            <input type="date" id="selectedDateInput" class="form-control w-auto form-control-sm rounded-pill px-3 bg-dark text-light border-secondary" onchange="renderDailyView()">
+                        </div>
+                        <hr class="border-secondary">
+                        <div id="dailyTimelineContainer" class="mt-3"></div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="viewProjects" role="tabpanel">
+                    <div class="card-custom p-3 p-md-4">
+                        <h4 class="fw-bold text-light mb-3 fs-5"><i class="fas fa-flag-checkered text-success me-2"></i> Progress Proyek & Target Jangka Panjang</h4>
+                        <p class="text-secondary small">Daftar agenda yang dikerjakan berhari-hari, berminggu-minggu, berbulan-bulan, hingga bertahun-tahun lengkap dengan kalkulator progres target.</p>
+                        <hr class="border-secondary">
+                        <div id="projectsContainer" class="mt-3 row g-3"></div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="viewCategories" role="tabpanel">
+                    <div class="card-custom p-3 p-md-4">
+                        <h4 class="fw-bold text-light mb-3 fs-5"><i class="fas fa-tags text-success me-2"></i> Pengelompokan Berdasarkan Prioritas</h4>
+                        <div class="row g-4 mt-2" id="priorityCategoriesContainer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL -->
+    <div class="modal fade" id="modalDetailJadwal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border shadow-lg rounded-4 p-2">
+                <div class="modal-header border-0 pb-0">
+                    <span class="badge bg-success px-3 py-1.5 rounded-pill" id="detailCategory">Kategori</span>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center pt-2 pb-4 px-4">
+                    <div class="display-4 mb-3" id="detailIconContainer">
+                        <i class="fas fa-calendar-day" id="detailIcon"></i>
+                    </div>
+                    <h3 class="fw-bold text-light fs-4 mb-2" id="detailTitle">Judul Agenda</h3>
+                    <span class="badge bg-secondary mb-3" id="detailPriority">Prioritas</span>
+                    <div class="bg-black bg-opacity-50 p-3 rounded-3 text-start mb-3 border border-secondary">
+                        <p class="mb-2 small text-light"><i class="fas fa-clock text-success me-2"></i><strong>Waktu:</strong> <span id="detailTime">08:00 - 10:30</span></p>
+                        <p class="mb-2 small text-light"><i class="fas fa-calendar-alt text-success me-2"></i><strong>Rentang Tanggal:</strong> <span id="detailDate">2026-10-13</span></p>
+                        <p class="mb-2 small text-light" id="detailDurationRow"><i class="fas fa-hourglass-half text-success me-2"></i><strong>Durasi Target:</strong> <span id="detailDuration">1 Hari</span></p>
+                        <p class="mb-0 small text-light"><i class="fas fa-redo text-success me-2"></i><strong>Pengulangan:</strong> <span id="detailRepeat">Sekali Saja</span></p>
+                    </div>
+                    <div id="detailProgressSection" class="mb-3 text-start d-none">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Target Penyelesaian</span>
+                            <span id="detailProgressText">0%</span>
+                        </div>
+                        <div class="progress-custom">
+                            <div class="progress-bar-anim" id="detailProgressBar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    <p class="text-secondary small text-start mb-0 p-2 bg-dark rounded border border-secondary" id="detailDesc">Tidak ada catatan tambahan.</p>
+                </div>
+                <div class="modal-footer border-0 pt-0 justify-content-center gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm px-4 rounded-pill" id="detailEditBtn"><i class="fas fa-edit me-1"></i> Edit</button>
+                    <button type="button" class="btn btn-outline-danger btn-sm px-4 rounded-pill" id="detailDeleteBtn"><i class="fas fa-trash me-1"></i> Hapus</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH & EDIT -->
+    <div class="modal fade" id="modalJadwal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border shadow-lg rounded-4">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold fs-6" id="modalTitleText"><i class="fas fa-plus-circle me-2"></i> Tambah Agenda / Proyek Baru</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form onsubmit="handleSaveJadwal(event)">
+                    <input type="hidden" id="editScheduleId">
+                    <input type="hidden" id="selectedIcon" value="fa-calendar-day">
+                    <input type="hidden" id="selectedColor" value="#10b981">
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">Judul Kegiatan / Proyek</label>
+                                    <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="formTitle" placeholder="Cth: Skripsi / Pengembangan Sistem" required>
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold small">Jenis Agenda</label>
+                                        <select class="form-select form-select-sm bg-dark text-light border-secondary" id="formScheduleType" onchange="toggleScheduleTypeFields()">
+                                            <option value="harian">Harian (Beberapa Jam)</option>
+                                            <option value="proyek">Proyek Jangka Panjang (Hari/Bulan/Tahun)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold small">Prioritas</label>
+                                        <select class="form-select form-select-sm bg-dark text-light border-secondary" id="formPriority">
+                                            <option value="Rendah">Rendah</option>
+                                            <option value="Sedang" selected>Sedang</option>
+                                            <option value="Tinggi">Tinggi</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row g-2 mb-3" id="timeFieldsWrapper">
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold small">Waktu Mulai (HH:MM)</label>
+                                        <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="formStartTime" placeholder="08:00">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold small">Waktu Selesai (HH:MM)</label>
+                                        <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="formEndTime" placeholder="10:30">
+                                    </div>
+                                </div>
+
+                                <div class="row g-2 mb-3 d-none" id="projectDateFieldsWrapper">
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold small">Tanggal Mulai Proyek</label>
+                                        <input type="date" class="form-control form-control-sm bg-dark text-light border-secondary" id="formStartDate">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold small">Target Selesai (Deadline)</label>
+                                        <input type="date" class="form-control form-control-sm bg-dark text-light border-secondary" id="formEndDate">
+                                    </div>
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold small">Tanggal Acuan / Mulai</label>
+                                        <input type="date" class="form-control form-control-sm bg-dark text-light border-secondary" id="formDate" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-bold small">Kategori</label>
+                                        <select class="form-select form-select-sm bg-dark text-light border-secondary" id="formCategory">
+                                            <option value="Rutinitas Harian">Rutinitas Harian</option>
+                                            <option value="Kesehatan">Kesehatan</option>
+                                            <option value="Akademik & Skill">Akademik & Skill</option>
+                                            <option value="Pengembangan Diri">Pengembangan Diri</option>
+                                            <option value="Proyek Besar">Proyek Besar</option>
+                                            <option value="Lainnya">Lainnya</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small">Pola Pengulangan</label>
+                                    <select class="form-select form-select-sm bg-dark text-light border-secondary" id="formRepeat">
+                                        <option value="once">Sekali Saja / Proyek</option>
+                                        <option value="everyday">Setiap Hari</option>
+                                        <option value="workdays">Hari Kerja (Senin - Jumat)</option>
+                                        <option value="weekly">Setiap Minggu</option>
+                                        <option value="monthly">Setiap Bulan</option>
+                                        <option value="yearly">Setiap Tahun</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold small">Pilih Warna Agenda</label>
+                                <div class="d-flex gap-2 mb-3" id="colorPalette">
+                                    <div class="color-dot selected" style="background: #10b981;" onclick="selectColor('#10b981', this)"></div>
+                                    <div class="color-dot" style="background: #3b82f6;" onclick="selectColor('#3b82f6', this)"></div>
+                                    <div class="color-dot" style="background: #8b5cf6;" onclick="selectColor('#8b5cf6', this)"></div>
+                                    <div class="color-dot" style="background: #f97316;" onclick="selectColor('#f97316', this)"></div>
+                                    <div class="color-dot" style="background: #ef4444;" onclick="selectColor('#ef4444', this)"></div>
+                                    <div class="color-dot" style="background: #ec4899;" onclick="selectColor('#ec4899', this)"></div>
+                                </div>
+
+                                <label class="form-label fw-bold small">Pilih Ikon (<span id="selectedIconName">Default</span>)</label>
+                                <div class="icon-grid" id="iconPickerGrid"></div>
+                                
+                                <div class="mt-3">
+                                    <label class="form-label fw-bold small">Catatan / Detail Target</label>
+                                    <textarea class="form-control form-control-sm bg-dark text-light border-secondary" id="formDesc" rows="2" placeholder="Catatan atau rincian target..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-black bg-opacity-50 px-4 py-3 border-secondary">
+                        <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-theme btn-sm px-4">Simpan Jadwal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_KEY = "$2a$10$wGWaV.o5hAXIdAaG15anoeZwwzWewrvSjFCL//FVbtxsOCs.MRvYW";
+        const BIN_ID = "6acda745ac6210605a2c6007";
+        
+        // Token Fonnte Utama Anda
+        const FONNTE_TOKEN = "vFr5GcNUVYNdrhBHL3Jj";
+        
+        // Target Pengiriman ke Nomor Cadangan Anda
+        const TARGET_WHATSAPP = "6281549506621"; 
+        
+        let notifiedWhatsAppEvents = {};
+
+        let masterData = { setting: {}, jadwal: [] };
+        let globalZoomLevel = 0.7;
+
+        const iconList = [
+            "fa-calendar-day", "fa-clock", "fa-book", "fa-laptop-code", "fa-dumbbell", "fa-heartbeat", "fa-utensils", "fa-coffee",
+            "fa-briefcase", "fa-graduation-cap", "fa-bed", "fa-shower", "fa-running", "fa-biking", "fa-swimmer", "fa-walking",
+            "fa-music", "fa-film", "fa-gamepad", "fa-camera", "fa-pen-nib", "fa-paint-brush", "fa-code", "fa-database",
+            "fa-server", "fa-network-wired", "fa-microchip", "fa-robot", "fa-lightbulb", "fa-brain", "fa-book-reader", "fa-bookmark",
+            "fa-shopping-cart", "fa-store", "fa-wallet", "fa-credit-card", "fa-money-bill-wave", "fa-piggy-bank", "fa-car", "fa-bus",
+            "fa-subway", "fa-plane", "fa-bicycle", "fa-motorcycle", "fa-gas-pump", "fa-home", "fa-building", "fa-hospital",
+            "fa-clinic-medical", "fa-pills", "fa-stethoscope", "fa-first-aid", "fa-apple-alt", "fa-carrot", "fa-fish", "fa-egg",
+            "fa-bread-slice", "fa-glass-water", "fa-mug-hot", "fa-pizza-slice", "fa-hamburger", "fa-ice-cream", "fa-birthday-cake", "fa-gift",
+            "fa-hands-wash", "fa-pray", "fa-mosque", "fa-church", "fa-synagogue", "fa-landmark", "fa-university", "fa-school",
+            "fa-child", "fa-baby", "fa-user-friends", "fa-users", "fa-comments", "fa-phone", "fa-envelope", "fa-paper-plane",
+            "fa-bullhorn", "fa-bell", "fa-flag", "fa-trophy", "fa-medal", "fa-award", "fa-star", "fa-fire",
+            "fa-bolt", "fa-sun", "fa-moon", "fa-cloud-rain", "fa-snowflake", "fa-umbrella", "fa-tree", "fa-seedling",
+            "fa-compass", "fa-map", "fa-globe", "fa-anchor", "fa-feather", "fa-shield-alt", "fa-key", "fa-lock",
+            "fa-unlock", "fa-search", "fa-eye", "fa-headphones", "fa-volume-up", "fa-microphone", "fa-video", "fa-tv",
+            "fa-desktop", "fa-tablet-alt", "fa-mobile-alt", "fa-print", "fa-calculator", "fa-folder", "fa-file-alt", "fa-archive"
+        ];
+
+        const colorPaletteList = ["#10b981", "#3b82f6", "#8b5cf6", "#f97316", "#ef4444", "#ec4899", "#14b8a6", "#38bdf8", "#fbbf24", "#a855f7"];
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const savedTheme = localStorage.getItem('app_theme') || 'theme-neon';
+            setTheme(savedTheme, false);
+
+            document.documentElement.style.setProperty('--global-zoom', globalZoomLevel);
+
+            const today = new Date();
+            document.getElementById('filterMonth').value = today.getMonth() + 1;
+            document.getElementById('filterYear').value = today.getFullYear();
+            
+            const todayStr = getWitaDateString(today);
+            document.getElementById('selectedDateInput').value = todayStr;
+            document.getElementById('quickDateJump').value = todayStr;
+            document.getElementById('formDate').value = todayStr;
+            document.getElementById('formStartDate').value = todayStr;
+            document.getElementById('formEndDate').value = todayStr;
+
+            buildIconPicker();
+            initDraggableClock();
+            await fetchMasterData();
+
+            setInterval(updateWitaClockAndActiveSchedules, 1000);
+            updateWitaClockAndActiveSchedules();
+        });
+
+        // Fitur Drag & Drop untuk Jam Mengambang
+        function initDraggableClock() {
+            const clockWidget = document.getElementById('floatingClockWidget');
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+
+            clockWidget.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
+
+            clockWidget.addEventListener('touchstart', dragStart, { passive: false });
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('touchend', dragEnd);
+
+            function dragStart(e) {
+                isDragging = true;
+                const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+                startX = clientX;
+                startY = clientY;
+
+                const rect = clockWidget.getBoundingClientRect();
+                initialX = rect.left;
+                initialY = rect.top;
+
+                clockWidget.style.bottom = 'auto';
+                clockWidget.style.right = 'auto';
+                clockWidget.style.left = initialX + 'px';
+                clockWidget.style.top = initialY + 'px';
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+
+                clockWidget.style.left = (initialX + dx) + 'px';
+                clockWidget.style.top = (initialY + dy) + 'px';
+            }
+
+            function dragEnd() {
+                isDragging = false;
+            }
+        }
+
+        function getWitaCurrentTime() {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const witaTime = new Date(utc + (3600000 * 8));
+            return witaTime;
+        }
+
+        function getWitaDateString(dateObj) {
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function playAlarmSound() {
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.volume = 1.0;
+            audio.play().catch(err => {
+                console.log("Audio diblokir browser jika belum ada interaksi klik:", err);
+            });
+        }
+
+        async function sendWhatsAppNotification(title, timeStr, category) {
+            playAlarmSound();
+
+            const message = `🔔 *PENGINGAT AGENDA PRIBADI*\n\n` +
+                            `Halo Tandy, waktunya menjalankan kegiatan:\n` +
+                            `📌 *${title}*\n` +
+                            `📂 Kategori: ${category}\n` +
+                            `⏰ Pukul: ${timeStr} WITA\n\n` +
+                            `_Pesan otomatis dari Sistem Jadwal Pribadi Anda. https://jadwal-rose.vercel.app_`;
+
+            const formData = new URLSearchParams();
+            formData.append('target', TARGET_WHATSAPP);
+            formData.append('message', message);
+            formData.append('countryCode', '62');
+
+            try {
+                const response = await fetch('https://api.fonnte.com/send', {
+                    method: 'POST',
+                    headers: { 'Authorization': FONNTE_TOKEN },
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.status) {
+                    console.log("Notifikasi WhatsApp berhasil dikirim ke nomor cadangan!");
+                    showAlert("Notifikasi WA berhasil dikirim ke nomor cadangan!");
+                } else {
+                    console.error("Gagal mengirim WA:", result.reason);
+                    showAlert("Gagal mengirim WA: " + result.reason, "danger");
+                }
+            } catch (error) {
+                console.error("Kesalahan jaringan Fonnte:", error);
+                showAlert("Kesalahan jaringan Fonnte!", "danger");
+            }
+        }
+
+        async function testSendWhatsAppManually() {
+            await sendWhatsAppNotification("Uji Coba Kirim ke Nomor Cadangan", "Sekarang", "Pengembangan Diri");
+        }
+
+        function updateWitaClockAndActiveSchedules() {
+            const witaNow = getWitaCurrentTime();
+            const hours = String(witaNow.getHours()).padStart(2, '0');
+            const minutes = String(witaNow.getMinutes()).padStart(2, '0');
+            const seconds = String(witaNow.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('floatingWitaClock').innerText = `${hours}:${minutes}:${seconds} WITA`;
+            
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('floatingWitaDate').innerText = witaNow.toLocaleDateString('id-ID', options);
+
+            const selectedDate = document.getElementById('selectedDateInput').value;
+            const currentWitaDateStr = getWitaDateString(witaNow);
+            const currentTimeStr = `${hours}:${minutes}`;
+
+            document.querySelectorAll('.timeline-item').forEach(el => {
+                const timeLabel = el.getAttribute('data-time');
+                const dateLabel = el.getAttribute('data-date');
+                if(timeLabel && timeLabel.includes(' - ') && dateLabel === currentWitaDateStr) {
+                    const parts = timeLabel.split(' - ');
+                    const startTime = parts[0].trim();
+                    const endTime = parts[1].trim();
+
+                    if (currentTimeStr === startTime) {
+                        const titleText = el.querySelector('h5').innerText;
+                        const categoryText = el.querySelector('.badge-category').innerText;
+                        const notifKey = `${currentWitaDateStr}-${startTime}-${titleText}`;
+                        
+                        if (!notifiedWhatsAppEvents[notifKey]) {
+                            sendWhatsAppNotification(titleText, timeLabel, categoryText);
+                            notifiedWhatsAppEvents[notifKey] = true;
+                        }
+                    }
+
+                    if(currentTimeStr >= startTime && currentTimeStr <= endTime) {
+                        el.classList.add('active-now');
+                        if(!el.querySelector('.active-badge-tag')) {
+                            const badgeContainer = el.querySelector('.d-flex.gap-1.mb-1');
+                            if(badgeContainer && !badgeContainer.querySelector('.badge-active-now')) {
+                                badgeContainer.innerHTML += `<span class="badge bg-danger text-white animate-pulse badge-active-now" style="font-size: 0.65rem;"><i class="fas fa-bolt me-1"></i> SEDANG BERLANGSUNG ⚡</span>`;
+                            }
+                        }
+                    } else {
+                        el.classList.remove('active-now');
+                    }
+                }
+            });
+        }
+
+        function adjustGlobalZoom(amount) {
+            globalZoomLevel = Math.min(1.3, Math.max(0.7, globalZoomLevel + amount));
+            document.documentElement.style.setProperty('--global-zoom', globalZoomLevel);
+        }
+
+        function resetGlobalZoom() {
+            globalZoomLevel = 0.7;
+            document.documentElement.style.setProperty('--global-zoom', globalZoomLevel);
+        }
+
+        function buildIconPicker() {
+            const grid = document.getElementById('iconPickerGrid');
+            grid.innerHTML = '';
+            iconList.forEach(ic => {
+                grid.innerHTML += `
+                    <div class="icon-option" onclick="selectIcon('${ic}')" id="ico-${ic}">
+                        <i class="fas ${ic}"></i>
+                    </div>
+                `;
+            });
+            selectIcon('fa-calendar-day');
+        }
+
+        function selectIcon(iconName) {
+            document.getElementById('selectedIcon').value = iconName;
+            document.querySelectorAll('.icon-option').forEach(el => el.classList.remove('selected'));
+            const target = document.getElementById(`ico-${iconName}`);
+            if(target) target.classList.add('selected');
+            document.getElementById('selectedIconName').innerText = iconName;
+        }
+
+        function selectColor(colorCode, element) {
+            document.getElementById('selectedColor').value = colorCode;
+            document.querySelectorAll('.color-dot').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function setTheme(themeName, save = true) {
+            document.body.className = themeName;
+            if(save) localStorage.setItem('app_theme', themeName);
+        }
+
+        function toggleScheduleTypeFields() {
+            const type = document.getElementById('formScheduleType').value;
+            const timeWrapper = document.getElementById('timeFieldsWrapper');
+            const projectWrapper = document.getElementById('projectDateFieldsWrapper');
+            if(type === 'proyek') {
+                timeWrapper.classList.add('d-none');
+                projectWrapper.classList.remove('d-none');
+                document.getElementById('formStartTime').removeAttribute('required');
+                document.getElementById('formEndTime').removeAttribute('required');
+            } else {
+                timeWrapper.classList.remove('d-none');
+                projectWrapper.classList.add('d-none');
+                document.getElementById('formStartTime').setAttribute('required', 'true');
+                document.getElementById('formEndTime').setAttribute('required', 'true');
+            }
+        }
+
+        function shiftMonth(direction) {
+            let m = parseInt(document.getElementById('filterMonth').value) + direction;
+            let y = parseInt(document.getElementById('filterYear').value);
+            if(m > 12) { m = 1; y++; }
+            else if(m < 1) { m = 12; y--; }
+            document.getElementById('filterMonth').value = m;
+            document.getElementById('filterYear').value = y;
+            renderApp();
+        }
+
+        function jumpToDateView(dateStr) {
+            if(!dateStr) return;
+            const parts = dateStr.split('-');
+            if(parts.length === 3) {
+                document.getElementById('filterYear').value = parts[0];
+                document.getElementById('filterMonth').value = parseInt(parts[1]);
+                document.getElementById('selectedDateInput').value = dateStr;
+                renderApp();
+            }
+        }
+
+        async function fetchMasterData() {
+            showLoading(true);
+            try {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': API_KEY }
+                });
+                if(!res.ok) throw new Error("Gagal mengambil data");
+                const result = await res.json();
+                masterData = result.record;
+                if(!masterData.jadwal) masterData.jadwal = [];
+                renderApp();
+            } catch (err) {
+                showAlert("Gagal memuat: " + err.message, "danger");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function saveMasterDataToCloud() {
+            showLoading(true);
+            try {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': API_KEY
+                    },
+                    body: JSON.stringify(masterData)
+                });
+                if(!res.ok) throw new Error("Gagal menyimpan");
+                showAlert("Jadwal & Proyek berhasil disimpan permanen ke Cloud!");
+                renderApp();
+            } catch (err) {
+                showAlert("Gagal menyimpan: " + err.message, "danger");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function renderApp() {
+            renderCalendarView();
+            renderDailyView();
+            renderProjectsView();
+            renderCategoriesView();
+        }
+
+        function renderCalendarView() {
+            const year = parseInt(document.getElementById('filterYear').value) || 2026;
+            const month = parseInt(document.getElementById('filterMonth').value);
+            
+            const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            document.getElementById('calendarTitle').innerText = `${monthNames[month - 1]} ${year}`;
+
+            const grid = document.getElementById('calendarDaysGrid');
+            grid.innerHTML = '';
+
+            const firstDayIndex = new Date(year, month - 1, 1).getDay();
+            const totalDays = new Date(year, month, 0).getDate();
+            let monthEventsCount = 0;
+
+            let availableIcons = [...iconList];
+            let availableColors = [...colorPaletteList];
+            let seed = year * 100 + month;
+            function pseudoRandom(max) {
+                seed = (seed * 9301 + 49297) % 233280;
+                return Math.floor((seed / 233280) * max);
+            }
+
+            for(let i = 0; i < firstDayIndex; i++) {
+                grid.innerHTML += `<div class="calendar-cell bg-transparent opacity-25 border-0"></div>`;
+            }
+
+            for(let day = 1; day <= totalDays; day++) {
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                const dayEvents = masterData.jadwal.filter(j => {
+                    if(j.date === dateStr || isRecurringMatch(j, dateStr)) return true;
+                    if(j.type === 'proyek' && j.startDate && j.endDate) {
+                        return dateStr >= j.startDate && dateStr <= j.endDate;
+                    }
+                    return false;
+                });
+
+                monthEventsCount += dayEvents.length;
+
+                // Tampilan Ringkas Berbasis Ikon di Kalender
+                let iconsHtml = '';
+                dayEvents.forEach(ev => {
+                    const pillBg = ev.color || '#10b981';
+                    const evIcon = ev.icon || 'fa-calendar-day';
+                    iconsHtml += `<div class="calendar-icon-pill" style="background-color: ${pillBg};" onclick="event.stopPropagation(); showDetailModal(${ev.id})" title="${ev.title} (${ev.time || 'Proyek'})"><i class="fas ${ev.icon || 'fa-calendar-day'}"></i></div>`;
+                });
+
+                const hasClass = dayEvents.length > 0 ? 'has-event' : '';
+                let uniqueIconIndex = pseudoRandom(availableIcons.length);
+                let chosenIcon = availableIcons.splice(uniqueIconIndex, 1)[0] || "fa-star";
+                let uniqueColorIndex = pseudoRandom(availableColors.length);
+                let chosenColor = availableColors[uniqueColorIndex % availableColors.length];
+
+                grid.innerHTML += `
+                    <div class="calendar-cell ${hasClass}" onclick="openDayDetail('${dateStr}')">
+                        <div class="calendar-date-num">${day}</div>
+                        ${dayEvents.length === 0 ? `<i class="fas ${chosenIcon} empty-day-icon" style="color: ${chosenColor};"></i>` : ''}
+                        <div class="calendar-icons-container">${iconsHtml}</div>
+                        <div class="add-btn-cell" onclick="event.stopPropagation(); openAddModalForDate('${dateStr}')" title="Tambah Jadwal"><i class="fas fa-plus"></i></div>
+                    </div>
+                `;
+            }
+            document.getElementById('totalMonthEvents').innerText = `${monthEventsCount} Agenda/Proyek`;
+        }
+
+        function isRecurringMatch(schedule, targetDateStr) {
+            if(schedule.repeat === 'once') return false;
+            const targetDate = new Date(targetDateStr);
+            const scheduleDate = new Date(schedule.date);
+            if(targetDate < scheduleDate) return false;
+
+            if(schedule.repeat === 'everyday') return true;
+            if(schedule.repeat === 'workdays') {
+                const dayOfWeek = targetDate.getDay();
+                return dayOfWeek >= 1 && dayOfWeek <= 5;
+            }
+            if(schedule.repeat === 'weekly') {
+                return targetDate.getDay() === scheduleDate.getDay();
+            }
+            if(schedule.repeat === 'monthly') {
+                return targetDate.getDate() === scheduleDate.getDate();
+            }
+            if(schedule.repeat === 'yearly') {
+                return targetDate.getDate() === scheduleDate.getDate() && targetDate.getMonth() === scheduleDate.getMonth();
+            }
+            return false;
+        }
+
+        function openDayDetail(dateStr) {
+            document.getElementById('selectedDateInput').value = dateStr;
+            document.getElementById('quickDateJump').value = dateStr;
+            new bootstrap.Tab(document.getElementById('tab-daily-btn')).show();
+            renderDailyView();
+        }
+
+        function openAddModalForDate(dateStr) {
+            prepareAddModal();
+            document.getElementById('formDate').value = dateStr;
+            document.getElementById('formStartDate').value = dateStr;
+            document.getElementById('formEndDate').value = dateStr;
+            new bootstrap.Modal(document.getElementById('modalJadwal')).show();
+        }
+
+        function renderDailyView() {
+            const selectedDate = document.getElementById('selectedDateInput').value;
+            document.getElementById('quickDateJump').value = selectedDate;
+            const container = document.getElementById('dailyTimelineContainer');
+            container.innerHTML = '';
+
+            const dayEvents = masterData.jadwal.filter(j => {
+                if(j.date === selectedDate || isRecurringMatch(j, selectedDate)) return true;
+                if(j.type === 'proyek' && j.startDate && j.endDate) {
+                    return selectedDate >= j.startDate && selectedDate <= selectedDate;
+                }
+                return false;
+            });
+
+            if(dayEvents.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-calendar-day fa-2x mb-2 opacity-50"></i>
+                        <p class="small mb-0">Tidak ada jadwal pada tanggal ${selectedDate}.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let timeSlotsMap = {};
+            dayEvents.forEach(ev => {
+                if(ev.type !== 'proyek' && ev.time) {
+                    if(!timeSlotsMap[ev.time]) timeSlotsMap[ev.time] = [];
+                    timeSlotsMap[ev.time].push(ev);
+                }
+            });
+
+            dayEvents.sort((a, b) => (a.time || '00:00').localeCompare(b.time || '00:00'));
+
+            const witaNow = getWitaCurrentTime();
+            const currentWitaDateStr = getWitaDateString(witaNow);
+            const currentWitaTimeStr = `${String(witaNow.getHours()).padStart(2, '0')}:${String(witaNow.getMinutes()).padStart(2, '0')}`;
+
+            dayEvents.forEach(ev => {
+                const priorityColor = ev.priority === 'Tinggi' ? 'danger' : ev.priority === 'Sedang' ? 'warning text-dark' : 'secondary';
+                const iconColorStyle = ev.color ? `color: ${ev.color};` : '';
+                
+                let isConflict = false;
+                if(ev.type !== 'proyek' && ev.time && timeSlotsMap[ev.time] && timeSlotsMap[ev.time].length > 1) {
+                    isConflict = true;
+                }
+
+                let isActiveNow = false;
+                if(ev.type !== 'proyek' && ev.time && ev.time.includes(' - ') && selectedDate === currentWitaDateStr) {
+                    const parts = ev.time.split(' - ');
+                    if(currentWitaTimeStr >= parts[0].trim() && currentWitaTimeStr <= parts[1].trim()) {
+                        isActiveNow = true;
+                    }
+                }
+
+                container.innerHTML += `
+                    <div class="timeline-item ${isActiveNow ? 'active-now' : ''}" data-time="${ev.time || ''}" data-date="${selectedDate}" onclick="showDetailModal(${ev.id})">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="d-flex gap-3 align-items-start">
+                                <div class="fs-4 mt-1" style="${iconColorStyle}"><i class="fas ${ev.icon || 'fa-calendar-day'}"></i></div>
+                                <div>
+                                    <div class="d-flex gap-1 mb-1 flex-wrap">
+                                        <span class="badge badge-category bg-success text-white">${ev.category}</span>
+                                        <span class="badge bg-${priorityColor}" style="font-size: 0.65rem;">Prioritas: ${ev.priority}</span>
+                                        ${isActiveNow ? `<span class="badge bg-danger text-white animate-pulse" style="font-size: 0.65rem;"><i class="fas fa-bolt me-1"></i> SEDANG BERLANGSUNG ⚡</span>` : ''}
+                                        ${isConflict ? `<span class="badge bg-danger text-white animate-pulse" style="font-size: 0.65rem;"><i class="fas fa-exclamation-triangle me-1"></i> Konflik Jam Bertumpuk (${timeSlotsMap[ev.time].length} Agenda)</span>` : ''}
+                                        ${ev.type === 'proyek' ? `<span class="badge bg-info text-dark" style="font-size: 0.65rem;">Proyek Jangka Panjang</span>` : ''}
+                                    </div>
+                                    <h5 class="fw-bold text-light fs-6 mb-1">${ev.title}</h5>
+                                    ${ev.desc ? `<p class="text-secondary small mb-1" style="font-size: 0.78rem;">${ev.desc}</p>` : ''}
+                                    <p class="text-secondary small mb-0" style="font-size: 0.75rem;"><i class="fas fa-clock text-success me-1"></i> ${ev.type === 'proyek' ? `Proyek (${ev.startDate} s/d${ev.endDate})` : ev.time} | <span class="badge bg-dark text-light border border-secondary">${ev.repeat}</span></p>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-1" onclick="event.stopPropagation()">
+                                <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="editSchedule(${ev.id})" title="Edit"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-outline-danger btn-sm py-0 px-2" onclick="deleteSchedule(${ev.id})" title="Hapus"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderProjectsView() {
+            const container = document.getElementById('projectsContainer');
+            container.innerHTML = '';
+            const projects = masterData.jadwal.filter(j => j.type === 'proyek' || (j.startDate && j.endDate));
+
+            if(projects.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5 text-muted col-12">
+                        <i class="fas fa-flag-checkered fa-2x mb-2 opacity-50"></i>
+                        <p class="small mb-0">Belum ada proyek jangka panjang.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const today = new Date();
+            projects.forEach(p => {
+                const start = new Date(p.startDate || p.date);
+                const end = new Date(p.endDate || p.date);
+                const totalDuration = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+                const elapsed = Math.max(0, Math.ceil((today - start) / (1000 * 60 * 60 * 24)));
+                let progress = Math.min(100, Math.round((elapsed / totalDuration) * 100));
+                if(today > end) progress = 100;
+                const colorStyle = p.color || '#10b981';
+
+                container.innerHTML += `
+                    <div class="col-md-6">
+                        <div class="card-custom p-3 border border-secondary" onclick="showDetailModal(${p.id})" style="cursor: pointer;">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex gap-2 align-items-center">
+                                    <div class="fs-4" style="color: ${colorStyle};"><i class="fas ${p.icon || 'fa-tasks'}"></i></div>
+                                    <div>
+                                        <h5 class="fw-bold text-light fs-6 mb-0">${p.title}</h5>
+                                        <span class="badge bg-dark text-secondary border border-secondary" style="font-size: 0.65rem;">${p.category}</span>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success" style="font-size: 0.7rem;">Target: ${totalDuration} Hari</span>
+                            </div>
+                            <p class="text-secondary small mb-2" style="font-size: 0.78rem;">${p.desc || 'Tidak ada catatan.'}</p>
+                            <div class="d-flex justify-content-between small text-muted mb-1" style="font-size: 0.7rem;">
+                                <span>Mulai: ${p.startDate}</span>
+                                <span>Deadline: ${p.endDate}</span>
+                            </div>
+                            <div class="d-flex justify-content-between small fw-bold text-light mb-1">
+                                <span>Progres Waktu</span>
+                                <span>${progress}%</span>
+                            </div>
+                            <div class="progress-custom">
+                                <div class="progress-bar-anim" style="width: ${progress}%; background-color: ${colorStyle};"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderCategoriesView() {
+            const container = document.getElementById('priorityCategoriesContainer');
+            container.innerHTML = '';
+            const priorities = ['Tinggi', 'Sedang', 'Rendah'];
+
+            priorities.forEach(pri => {
+                const items = masterData.jadwal.filter(j => (j.priority || 'Sedang') === pri);
+                const badgeColor = pri === 'Tinggi' ? 'danger' : pri === 'Sedang' ? 'warning text-dark' : 'secondary';
+                let itemsHtml = '';
+
+                if(items.length === 0) {
+                    itemsHtml = `<p class="text-muted small italic">Tidak ada agenda.</p>`;
+                } else {
+                    items.forEach(it => {
+                        itemsHtml += `
+                            <div class="p-2 mb-2 bg-dark rounded border border-secondary d-flex justify-content-between align-items-center" onclick="showDetailModal(${it.id})" style="cursor: pointer;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas ${it.icon || 'fa-calendar-day'}" style="color: ${it.color || '#10b981'};"></i>
+                                    <div>
+                                        <div class="fw-bold text-light small">${it.title}</div>
+                                        <div class="text-muted" style="font-size: 0.68rem;">${it.date} | ${it.category}</div>
+                                    </div>
+                                </div>
+                                <span class="badge bg-dark text-light border border-secondary" style="font-size: 0.65rem;">${it.type === 'proyek' ? 'Proyek' : it.time}</span>
+                            </div>
+                        `;
+                    });
+                }
+
+                container.innerHTML += `
+                    <div class="col-md-4">
+                        <div class="card-custom p-3 border border-secondary h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold text-light fs-6 mb-0"><i class="fas fa-signal me-2 text-success"></i> Prioritas ${pri}</h5>
+                                <span class="badge bg-${badgeColor}">${items.length} Agenda</span>
+                            </div>
+                            <div class="overflow-y-auto" style="max-height: 250px;">
+                                ${itemsHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function showDetailModal(id) {
+            const ev = masterData.jadwal.find(j => j.id === id);
+            if(!ev) return;
+
+            document.getElementById('detailCategory').innerText = ev.category;
+            document.getElementById('detailTitle').innerText = ev.title;
+            document.getElementById('detailPriority').innerText = `Prioritas: ${ev.priority || 'Sedang'}`;
+            document.getElementById('detailTime').innerText = ev.type === 'proyek' ? 'Proyek Multi-Hari' : ev.time;
+            document.getElementById('detailDate').innerText = ev.type === 'proyek' ? `${ev.startDate} s/d ${ev.endDate}` : ev.date;
+            document.getElementById('detailRepeat').innerText = ev.repeat;
+            document.getElementById('detailDesc').innerText = ev.desc || 'Tidak ada catatan tambahan.';
+            
+            const iconElem = document.getElementById('detailIcon');
+            iconElem.className = `fas ${ev.icon || 'fa-calendar-day'}`;
+            iconElem.style.color = ev.color || '#10b981';
+
+            const progressSec = document.getElementById('detailProgressSection');
+            if(ev.type === 'proyek' && ev.startDate && ev.endDate) {
+                progressSec.classList.remove('d-none');
+                const start = new Date(ev.startDate);
+                const end = new Date(ev.endDate);
+                const today = new Date();
+                const total = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+                const elapsed = Math.max(0, Math.ceil((today - start) / (1000 * 60 * 60 * 24)));
+                let prog = Math.min(100, Math.round((elapsed / total) * 100));
+                if(today > end) prog = 100;
+
+                document.getElementById('detailProgressText').innerText = `${prog}%`;
+                document.getElementById('detailProgressBar').style.width = `${prog}%`;
+                document.getElementById('detailProgressBar').style.backgroundColor = ev.color || '#10b981';
+            } else {
+                progressSec.classList.add('d-none');
+            }
+
+            document.getElementById('detailEditBtn').onclick = () => {
+                bootstrap.Modal.getInstance(document.getElementById('modalDetailJadwal')).hide();
+                editSchedule(ev.id);
+            };
+            document.getElementById('detailDeleteBtn').onclick = () => {
+                bootstrap.Modal.getInstance(document.getElementById('modalDetailJadwal')).hide();
+                deleteSchedule(ev.id);
+            };
+
+            new bootstrap.Modal(document.getElementById('modalDetailJadwal')).show();
+        }
+
+        function prepareAddModal() {
+            document.getElementById('editScheduleId').value = '';
+            document.getElementById('modalTitleText').innerHTML = '<i class="fas fa-plus-circle me-2"></i> Tambah Agenda / Proyek Baru';
+            document.querySelector('#modalJadwal form').reset();
+            const todayStr = document.getElementById('selectedDateInput').value;
+            document.getElementById('formDate').value = todayStr;
+            document.getElementById('formStartDate').value = todayStr;
+            document.getElementById('formEndDate').value = todayStr;
+            document.getElementById('formStartTime').value = "08:00";
+            document.getElementById('formEndTime').value = "10:30";
+            document.getElementById('formScheduleType').value = "harian";
+            toggleScheduleTypeFields();
+            selectIcon('fa-calendar-day');
+            selectColor('#10b981', document.querySelector('.color-dot'));
+        }
+
+        function editSchedule(id) {
+            const ev = masterData.jadwal.find(j => j.id === id);
+            if(!ev) return;
+
+            document.getElementById('editScheduleId').value = ev.id;
+            document.getElementById('formTitle').value = ev.title;
+            document.getElementById('formCategory').value = ev.category;
+            document.getElementById('formPriority').value = ev.priority || 'Sedang';
+            document.getElementById('formDate').value = ev.date;
+            document.getElementById('formScheduleType').value = ev.type || 'harian';
+            document.getElementById('formStartDate').value = ev.startDate || ev.date;
+            document.getElementById('formEndDate').value = ev.endDate || ev.date;
+            document.getElementById('formRepeat').value = ev.repeat;
+            document.getElementById('formDesc').value = ev.desc || '';
+            toggleScheduleTypeFields();
+            selectIcon(ev.icon || 'fa-calendar-day');
+
+            if(ev.color) {
+                document.getElementById('selectedColor').value = ev.color;
+                document.querySelectorAll('.color-dot').forEach(el => {
+                    if(el.style.backgroundColor === ev.color || rgbToHex(el.style.backgroundColor) === ev.color) {
+                        el.classList.add('selected');
+                    } else {
+                        el.classList.remove('selected');
+                    }
+                });
+            }
+
+            if(ev.time) {
+                const parts = ev.time.split(' - ');
+                if(parts.length === 2) {
+                    document.getElementById('formStartTime').value = parts[0];
+                    document.getElementById('formEndTime').value = parts[1];
+                }
+            }
+
+            document.getElementById('modalTitleText').innerHTML = '<i class="fas fa-edit me-2"></i> Edit Agenda / Proyek';
+            new bootstrap.Modal(document.getElementById('modalJadwal')).show();
+        }
+
+        async function handleSaveJadwal(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editScheduleId').value;
+            const title = document.getElementById('formTitle').value;
+            const category = document.getElementById('formCategory').value;
+            const priority = document.getElementById('formPriority').value;
+            const type = document.getElementById('formScheduleType').value;
+            
+            const startTime = document.getElementById('formStartTime').value;
+            const endTime = document.getElementById('formEndTime').value;
+            const time = type === 'proyek' ? 'Proyek' : `${startTime} - ${endTime}`;
+
+            const date = document.getElementById('formDate').value;
+            const startDate = document.getElementById('formStartDate').value;
+            const endDate = document.getElementById('formEndDate').value;
+            const repeat = document.getElementById('formRepeat').value;
+            const desc = document.getElementById('formDesc').value;
+            const icon = document.getElementById('selectedIcon').value;
+            const color = document.getElementById('selectedColor').value;
+
+            const targetDateObj = new Date(date);
+
+            if(editId) {
+                const idx = masterData.jadwal.findIndex(j => j.id == editId);
+                if(idx !== -1) {
+                    masterData.jadwal[idx] = {
+                        ...masterData.jadwal[idx],
+                        title, category, priority, type, time, date, startDate, endDate, repeat, desc, icon, color,
+                        year: targetDateObj.getFullYear(),
+                        month: targetDateObj.getMonth() + 1,
+                        week: getWeekNumber(targetDateObj)
+                    };
+                }
+            } else {
+                const newSchedule = {
+                    id: Date.now(),
+                    title, category, priority, type, time, date, startDate, endDate, repeat, desc, icon, color,
+                    year: targetDateObj.getFullYear(),
+                    month: targetDateObj.getMonth() + 1,
+                    week: getWeekNumber(targetDateObj),
+                    status: 'pending'
+                };
+                masterData.jadwal.unshift(newSchedule);
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('modalJadwal')).hide();
+            await saveMasterDataToCloud();
+        }
+
+        async function deleteSchedule(id) {
+            if(!confirm("Yakin ingin menghapus jadwal/proyek ini?")) return;
+            masterData.jadwal = masterData.jadwal.filter(j => j.id !== id);
+            await saveMasterDataToCloud();
+        }
+
+        async function cleanExpiredSchedules() {
+            const todayStr = getWitaDateString(getWitaCurrentTime());
+            const initialCount = masterData.jadwal.length;
+            masterData.jadwal = masterData.jadwal.filter(j => {
+                if(j.repeat === 'once' && (j.endDate || j.date) < todayStr) return false;
+                return true;
+            });
+            const removed = initialCount - masterData.jadwal.length;
+            if(removed > 0) {
+                await saveMasterDataToCloud();
+                showAlert(`Berhasil membersihkan ${removed} jadwal kedaluwarsa.`);
+            } else {
+                showAlert("Tidak ada jadwal kedaluwarsa.", "secondary");
+            }
+        }
+
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+        }
+
+        function rgbToHex(rgb) {
+            if(!rgb) return '';
+            if(rgb.startsWith('#')) return rgb;
+            const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+            if(!match) return rgb;
+            return "#" + match.slice(1, 4).map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+        }
+
+        function showAlert(msg, type = "success") {
+            const box = document.getElementById('alertBox');
+            box.className = `alert alert-${type} shadow-sm mb-3`;
+            document.getElementById('alertMessage').innerText = msg;
+            box.classList.add('show');
+            box.classList.remove('d-none');
+            setTimeout(() => box.classList.add('d-none'), 4000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+    </script>
+</body>
+</html>
