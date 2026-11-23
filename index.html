@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Manajemen Jadwal Pribadi - Pro & Animatif</title>
+    <title>Manajemen Jadwal Pribadi - Supabase Cloud</title>
     
     <!-- PWA Manifest & Meta untuk Android -->
     <link rel="manifest" href="manifest.json">
@@ -17,6 +17,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         :root {
@@ -76,7 +78,6 @@
             position: relative;
         }
 
-        /* Widget Jam Mengambang yang Bisa Digeser (Draggable) */
         .floating-clock-widget {
             position: fixed;
             bottom: 20px;
@@ -440,7 +441,7 @@
 </head>
 <body class="theme-neon">
 
-    <!-- Widget Jam Mengambang Draggable (Bisa Digeser) -->
+    <!-- Widget Jam Mengambang Draggable -->
     <div class="floating-clock-widget" id="floatingClockWidget">
         <div class="text-success fs-4"><i class="fas fa-clock fa-spin" style="animation-duration: 10s;"></i></div>
         <div>
@@ -461,7 +462,7 @@
     <div id="loadingOverlay" class="loading-overlay">
         <div class="text-center">
             <div class="spinner-border text-light mb-2" role="status"></div>
-            <p class="fw-bold text-light small mb-0">Memuat Sistem Kreatif...</p>
+            <p class="fw-bold text-light small mb-0">Menghubungkan ke Supabase...</p>
         </div>
     </div>
 
@@ -472,18 +473,16 @@
             <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
                 <div>
                     <span class="badge bg-white text-dark fw-bold px-3 py-1 rounded-pill mb-2 shadow-sm" style="font-size: 0.7rem;">
-                        <i class="fas fa-calendar-check me-1"></i> Manajemen Jadwal Hierarkis & Target
+                        <i class="fas fa-database text-success me-1"></i> Manajemen Jadwal Hierarkis (Supabase Cloud)
                     </span>
                     <h1 class="fw-extrabold mb-1 fs-4 fs-md-2">Agenda & Proyek Pribadi</h1>
                     <p class="text-white-50 mb-0 small" style="font-size: 0.75rem;">Harian ➔ Mingguan ➔ Bulanan ➔ Tahunan & Proyek Multi-Hari</p>
                 </div>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <!-- Tombol Install PWA Android -->
                     <button id="installAppBtn" class="btn btn-info btn-sm fw-bold rounded-pill px-3 shadow-sm text-dark d-none" onclick="installPwaApp()">
                         <i class="fas fa-download me-1"></i> Instal Aplikasi
                     </button>
 
-                    <!-- Tombol Tes Kirim WA Instan ke Nomor Cadangan -->
                     <button class="btn btn-warning btn-sm fw-bold rounded-pill px-3 shadow-sm text-dark" onclick="testSendWhatsAppManually()">
                         <i class="fas fa-paper-plane me-1"></i> Tes Kirim ke No. Cadangan
                     </button>
@@ -541,15 +540,27 @@
                             <input type="number" class="form-control form-control-sm fw-bold text-center rounded-pill bg-dark text-light border-secondary" id="filterYear" onchange="renderApp()" value="2026" style="max-width: 80px; font-size: 0.8rem;">
                             <button class="btn btn-outline-light btn-sm px-2 py-1 rounded-pill" onclick="shiftMonth(1)" title="Bulan Berikutnya"><i class="fas fa-chevron-right"></i></button>
                         </div>
-                        <div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <input type="file" id="importJsonFile" accept=".json" class="d-none" onchange="handleImportJson(event)">
+                            <button class="btn btn-outline-info btn-sm rounded-pill px-3 fw-semibold" style="font-size: 0.78rem;" onclick="document.getElementById('importJsonFile').click()">
+                                <i class="fas fa-file-import me-1"></i> Impor JSON
+                            </button>
+                            <button class="btn btn-outline-success btn-sm rounded-pill px-3 fw-semibold" style="font-size: 0.78rem;" onclick="exportBackupJson()">
+                                <i class="fas fa-file-export me-1"></i> Backup JSON
+                            </button>
                             <button class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-semibold" style="font-size: 0.78rem;" onclick="cleanExpiredSchedules()">
                                 <i class="fas fa-broom me-1"></i> Bersihkan Lewat
                             </button>
                         </div>
                     </div>
-                    <div class="d-flex align-items-center gap-2 pt-1 border-top border-secondary border-opacity-25">
-                        <span class="text-secondary small text-nowrap" style="font-size: 0.75rem;"><i class="fas fa-calendar-day me-1"></i> Lompat Tanggal:</span>
-                        <input type="date" id="quickDateJump" class="form-control form-control-sm rounded-pill bg-dark text-light border-secondary px-2" style="max-width: 150px; font-size: 0.78rem;" onchange="jumpToDateView(this.value)">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pt-1 border-top border-secondary border-opacity-25">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-secondary small text-nowrap" style="font-size: 0.75rem;"><i class="fas fa-calendar-day me-1"></i> Lompat Tanggal:</span>
+                            <input type="date" id="quickDateJump" class="form-control form-control-sm rounded-pill bg-dark text-light border-secondary px-2" style="max-width: 150px; font-size: 0.78rem;" onchange="jumpToDateView(this.value)">
+                        </div>
+                        <button class="btn btn-outline-light btn-sm rounded-pill px-3" style="font-size: 0.72rem;" onclick="fetchMasterData()">
+                            <i class="fas fa-sync-alt me-1"></i> Sinkronkan Ulang
+                        </button>
                     </div>
                 </div>
             </div>
@@ -782,18 +793,21 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const API_KEY = "$2a$10$wGWaV.o5hAXIdAaG15anoeZwwzWewrvSjFCL//FVbtxsOCs.MRvYW";
-        const BIN_ID = "6acda745ac6210605a2c6007";
-        
+        const SUPABASE_URL = "https://gxdnhnjvyigtsinrvfht.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_mPnf3PmNV3yvarQrj5Mzqw_dkWnF0eB";
+        const TABLE_NAME = "jadwal_pribadi";
+        const LOCAL_STORAGE_KEY = "jadwal_supabase_cache_v1";
+
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         const FONNTE_TOKEN = "vFr5GcNUVYNdrhBHL3Jj";
         const TARGET_WHATSAPP = "6281549506621"; 
         
         let notifiedWhatsAppEvents = {};
-        let masterData = { setting: {}, jadwal: [] };
+        let masterData = { setting: { owner: "Tika Tandi Layuk" }, jadwal: [] };
         let globalZoomLevel = 0.7;
         let deferredPrompt;
 
-        // PWA Service Worker Registration & Install Trigger
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
@@ -849,11 +863,11 @@
 
             document.documentElement.style.setProperty('--global-zoom', globalZoomLevel);
 
-            const today = new Date();
-            document.getElementById('filterMonth').value = today.getMonth() + 1;
-            document.getElementById('filterYear').value = today.getFullYear();
+            const witaNow = getWitaCurrentTime();
+            document.getElementById('filterMonth').value = witaNow.getMonth() + 1;
+            document.getElementById('filterYear').value = witaNow.getFullYear();
             
-            const todayStr = getWitaDateString(today);
+            const todayStr = getWitaDateString(witaNow);
             document.getElementById('selectedDateInput').value = todayStr;
             document.getElementById('quickDateJump').value = todayStr;
             document.getElementById('formDate').value = todayStr;
@@ -920,8 +934,7 @@
         function getWitaCurrentTime() {
             const now = new Date();
             const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-            const witaTime = new Date(utc + (3600000 * 8));
-            return witaTime;
+            return new Date(utc + (3600000 * 8));
         }
 
         function getWitaDateString(dateObj) {
@@ -962,20 +975,24 @@
                 });
                 const result = await response.json();
                 if (result.status) {
-                    console.log("Notifikasi WhatsApp berhasil dikirim ke nomor cadangan!");
                     showAlert("Notifikasi WA berhasil dikirim ke nomor cadangan!");
                 } else {
-                    console.error("Gagal mengirim WA:", result.reason);
                     showAlert("Gagal mengirim WA: " + result.reason, "danger");
                 }
             } catch (error) {
-                console.error("Kesalahan jaringan Fonnte:", error);
                 showAlert("Kesalahan jaringan Fonnte!", "danger");
             }
         }
 
         async function testSendWhatsAppManually() {
             await sendWhatsAppNotification("Uji Coba Kirim ke Nomor Cadangan", "Sekarang", "Pengembangan Diri");
+        }
+
+        function normalizeClockTime(t) {
+            if(!t) return '';
+            const clean = t.trim().replace('.', ':');
+            const [h = '0', m = '0'] = clean.split(':');
+            return `${String(parseInt(h, 10) || 0).padStart(2, '0')}:${String(parseInt(m, 10) || 0).padStart(2, '0')}`;
         }
 
         function updateWitaClockAndActiveSchedules() {
@@ -989,7 +1006,6 @@
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('floatingWitaDate').innerText = witaNow.toLocaleDateString('id-ID', options);
 
-            const selectedDate = document.getElementById('selectedDateInput').value;
             const currentWitaDateStr = getWitaDateString(witaNow);
             const currentTimeStr = `${hours}:${minutes}`;
 
@@ -998,8 +1014,8 @@
                 const dateLabel = el.getAttribute('data-date');
                 if(timeLabel && timeLabel.includes(' - ') && dateLabel === currentWitaDateStr) {
                     const parts = timeLabel.split(' - ');
-                    const startTime = parts[0].trim();
-                    const endTime = parts[1].trim();
+                    const startTime = normalizeClockTime(parts[0]);
+                    const endTime = normalizeClockTime(parts[1]);
 
                     if (currentTimeStr === startTime) {
                         const titleText = el.querySelector('h5').innerText;
@@ -1014,21 +1030,21 @@
 
                     if(currentTimeStr >= startTime && currentTimeStr <= endTime) {
                         el.classList.add('active-now');
-                        if(!el.querySelector('.active-badge-tag')) {
-                            const badgeContainer = el.querySelector('.d-flex.gap-1.mb-1');
-                            if(badgeContainer && !badgeContainer.querySelector('.badge-active-now')) {
-                                badgeContainer.innerHTML += `<span class="badge bg-danger text-white animate-pulse badge-active-now" style="font-size: 0.65rem;"><i class="fas fa-bolt me-1"></i> SEDANG BERLANGSUNG ⚡</span>`;
-                            }
+                        const badgeContainer = el.querySelector('.d-flex.gap-1.mb-1');
+                        if(badgeContainer && !badgeContainer.querySelector('.badge-active-now')) {
+                            badgeContainer.innerHTML += `<span class="badge bg-danger text-white animate-pulse badge-active-now" style="font-size: 0.65rem;"><i class="fas fa-bolt me-1"></i> SEDANG BERLANGSUNG ⚡</span>`;
                         }
                     } else {
                         el.classList.remove('active-now');
+                        const activeBadge = el.querySelector('.badge-active-now');
+                        if(activeBadge) activeBadge.remove();
                     }
                 }
             });
         }
 
         function adjustGlobalZoom(amount) {
-            globalZoomLevel = Math.min(1.3, Math.max(0.7, globalZoomLevel + amount));
+            globalZoomLevel = Math.min(1.3, Math.max(0.7, Number((globalZoomLevel + amount).toFixed(2))));
             document.documentElement.style.setProperty('--global-zoom', globalZoomLevel);
         }
 
@@ -1061,7 +1077,7 @@
         function selectColor(colorCode, element) {
             document.getElementById('selectedColor').value = colorCode;
             document.querySelectorAll('.color-dot').forEach(el => el.classList.remove('selected'));
-            element.classList.add('selected');
+            if(element) element.classList.add('selected');
         }
 
         function setTheme(themeName, save = true) {
@@ -1107,43 +1123,149 @@
             }
         }
 
+        // ==========================================
+        // OPERASI DATABASE SUPABASE
+        // ==========================================
         async function fetchMasterData() {
             showLoading(true);
             try {
-                const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                    headers: { 'X-Master-Key': API_KEY }
-                });
-                if(!res.ok) throw new Error("Gagal mengambil data");
-                const result = await res.json();
-                masterData = result.record;
-                if(!masterData.jadwal) masterData.jadwal = [];
+                const { data, error } = await supabaseClient
+                    .from(TABLE_NAME)
+                    .select('*')
+                    .order('id', { ascending: false });
+
+                if (error) throw error;
+
+                masterData.jadwal = Array.isArray(data) ? data : [];
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(masterData));
                 renderApp();
             } catch (err) {
-                showAlert("Gagal memuat: " + err.message, "danger");
+                const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (cached) {
+                    try {
+                        masterData = JSON.parse(cached);
+                        renderApp();
+                        showAlert("Mode lokal aktif (" + err.message + ")", "warning");
+                        return;
+                    } catch (_) {}
+                }
+                showAlert("Supabase: " + err.message, "danger");
+                renderApp();
             } finally {
                 showLoading(false);
             }
         }
 
-        async function saveMasterDataToCloud() {
+        async function upsertRowToSupabase(rowObj) {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(masterData));
             showLoading(true);
             try {
-                const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': API_KEY
-                    },
-                    body: JSON.stringify(masterData)
-                });
-                if(!res.ok) throw new Error("Gagal menyimpan");
-                showAlert("Jadwal & Proyek berhasil disimpan permanen ke Cloud!");
-                renderApp();
+                const { error } = await supabaseClient
+                    .from(TABLE_NAME)
+                    .upsert(rowObj, { onConflict: 'id' });
+                if (error) throw error;
+                showAlert("Jadwal & Proyek berhasil disimpan ke Supabase!");
             } catch (err) {
-                showAlert("Gagal menyimpan: " + err.message, "danger");
+                showAlert("Gagal simpan ke Supabase (" + err.message + "). Data tersimpan di cache lokal.", "danger");
             } finally {
                 showLoading(false);
+                renderApp();
             }
+        }
+
+        async function deleteRowFromSupabase(id) {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(masterData));
+            showLoading(true);
+            try {
+                const { error } = await supabaseClient
+                    .from(TABLE_NAME)
+                    .delete()
+                    .eq('id', id);
+                if (error) throw error;
+                showAlert("Agenda berhasil dihapus dari Supabase.");
+            } catch (err) {
+                showAlert("Gagal hapus di Supabase: " + err.message, "danger");
+            } finally {
+                showLoading(false);
+                renderApp();
+            }
+        }
+
+        // ==========================================
+        // IMPOR & BACKUP JSON (MIGRASI DARI JSONBIN)
+        // ==========================================
+        async function handleImportJson(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            try {
+                const text = await file.text();
+                const parsed = JSON.parse(text);
+                const list = Array.isArray(parsed)
+                    ? parsed
+                    : (parsed.jadwal || (parsed.record && parsed.record.jadwal) || []);
+
+                if (!Array.isArray(list) || list.length === 0) {
+                    showAlert("File JSON tidak berisi array jadwal yang valid.", "danger");
+                    return;
+                }
+
+                const sanitized = list.map((item, index) => ({
+                    id: Number(item.id) || (Date.now() + index),
+                    title: item.title || "Tanpa Judul",
+                    category: item.category || "Lainnya",
+                    priority: item.priority || "Sedang",
+                    type: item.type || "harian",
+                    time: item.time || "08:00 - 09:00",
+                    date: item.date || getWitaDateString(getWitaCurrentTime()),
+                    startDate: item.startDate || item.date || "",
+                    endDate: item.endDate || item.date || "",
+                    repeat: item.repeat || "once",
+                    desc: item.desc || "",
+                    icon: item.icon || "fa-calendar-day",
+                    color: item.color || "#10b981",
+                    year: Number(item.year) || 2026,
+                    month: Number(item.month) || 1,
+                    week: Number(item.week) || 1,
+                    status: item.status || "pending"
+                }));
+
+                const mergedMap = new Map(masterData.jadwal.map(j => [j.id, j]));
+                sanitized.forEach(item => mergedMap.set(item.id, item));
+                masterData.jadwal = Array.from(mergedMap.values()).sort((a, b) => b.id - a.id);
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(masterData));
+
+                showLoading(true);
+                const { error } = await supabaseClient
+                    .from(TABLE_NAME)
+                    .upsert(sanitized, { onConflict: 'id' });
+                showLoading(false);
+                if (error) throw error;
+
+                showAlert(`Berhasil mengimpor ${sanitized.length} agenda ke Supabase!`);
+                renderApp();
+            } catch (err) {
+                showLoading(false);
+                showAlert("Gagal impor JSON: " + err.message, "danger");
+            } finally {
+                event.target.value = "";
+            }
+        }
+
+        function exportBackupJson() {
+            const payload = {
+                setting: {
+                    owner: "Tika Tandi Layuk",
+                    exported_at: getWitaDateString(getWitaCurrentTime())
+                },
+                jadwal: masterData.jadwal
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `backup-jadwal-${getWitaDateString(getWitaCurrentTime())}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
         function renderApp() {
@@ -1151,6 +1273,15 @@
             renderDailyView();
             renderProjectsView();
             renderCategoriesView();
+        }
+
+        function isEventOnDate(j, dateStr) {
+            if(!j || !dateStr) return false;
+            if(j.date === dateStr || isRecurringMatch(j, dateStr)) return true;
+            if(j.type === 'proyek' && j.startDate && j.endDate) {
+                return dateStr >= j.startDate && dateStr <= j.endDate;
+            }
+            return false;
         }
 
         function renderCalendarView() {
@@ -1181,15 +1312,7 @@
 
             for(let day = 1; day <= totalDays; day++) {
                 const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                
-                const dayEvents = masterData.jadwal.filter(j => {
-                    if(j.date === dateStr || isRecurringMatch(j, dateStr)) return true;
-                    if(j.type === 'proyek' && j.startDate && j.endDate) {
-                        return dateStr >= j.startDate && dateStr <= j.endDate;
-                    }
-                    return false;
-                });
-
+                const dayEvents = masterData.jadwal.filter(j => isEventOnDate(j, dateStr));
                 monthEventsCount += dayEvents.length;
 
                 let iconsHtml = '';
@@ -1217,10 +1340,13 @@
         }
 
         function isRecurringMatch(schedule, targetDateStr) {
-            if(schedule.repeat === 'once') return false;
-            const targetDate = new Date(targetDateStr);
-            const scheduleDate = new Date(schedule.date);
-            if(targetDate < scheduleDate) return false;
+            if(!schedule || !schedule.date || schedule.repeat === 'once') return false;
+            if(targetDateStr < schedule.date) return false;
+
+            const [ty, tm, td] = targetDateStr.split('-').map(Number);
+            const [sy, sm, sd] = schedule.date.split('-').map(Number);
+            const targetDate = new Date(ty, tm - 1, td);
+            const scheduleDate = new Date(sy, sm - 1, sd);
 
             if(schedule.repeat === 'everyday') return true;
             if(schedule.repeat === 'workdays') {
@@ -1260,13 +1386,7 @@
             const container = document.getElementById('dailyTimelineContainer');
             container.innerHTML = '';
 
-            const dayEvents = masterData.jadwal.filter(j => {
-                if(j.date === selectedDate || isRecurringMatch(j, selectedDate)) return true;
-                if(j.type === 'proyek' && j.startDate && j.endDate) {
-                    return selectedDate >= j.startDate && selectedDate <= selectedDate;
-                }
-                return false;
-            });
+            const dayEvents = masterData.jadwal.filter(j => isEventOnDate(j, selectedDate));
 
             if(dayEvents.length === 0) {
                 container.innerHTML = `
@@ -1281,12 +1401,13 @@
             let timeSlotsMap = {};
             dayEvents.forEach(ev => {
                 if(ev.type !== 'proyek' && ev.time) {
-                    if(!timeSlotsMap[ev.time]) timeSlotsMap[ev.time] = [];
-                    timeSlotsMap[ev.time].push(ev);
+                    const slotKey = normalizeClockTime(ev.time.split(' - ')[0]) + '-' + normalizeClockTime(ev.time.split(' - ')[1] || '');
+                    if(!timeSlotsMap[slotKey]) timeSlotsMap[slotKey] = [];
+                    timeSlotsMap[slotKey].push(ev);
                 }
             });
 
-            dayEvents.sort((a, b) => (a.time || '00:00').localeCompare(b.time || '00:00'));
+            dayEvents.sort((a, b) => normalizeClockTime((a.time || '00:00').split(' - ')[0]).localeCompare(normalizeClockTime((b.time || '00:00').split(' - ')[0])));
 
             const witaNow = getWitaCurrentTime();
             const currentWitaDateStr = getWitaDateString(witaNow);
@@ -1296,15 +1417,15 @@
                 const priorityColor = ev.priority === 'Tinggi' ? 'danger' : ev.priority === 'Sedang' ? 'warning text-dark' : 'secondary';
                 const iconColorStyle = ev.color ? `color: ${ev.color};` : '';
                 
-                let isConflict = false;
-                if(ev.type !== 'proyek' && ev.time && timeSlotsMap[ev.time] && timeSlotsMap[ev.time].length > 1) {
-                    isConflict = true;
-                }
+                const slotKey = normalizeClockTime((ev.time || '').split(' - ')[0]) + '-' + normalizeClockTime((ev.time || '').split(' - ')[1] || '');
+                const isConflict = ev.type !== 'proyek' && ev.time && timeSlotsMap[slotKey] && timeSlotsMap[slotKey].length > 1;
 
                 let isActiveNow = false;
                 if(ev.type !== 'proyek' && ev.time && ev.time.includes(' - ') && selectedDate === currentWitaDateStr) {
                     const parts = ev.time.split(' - ');
-                    if(currentWitaTimeStr >= parts[0].trim() && currentWitaTimeStr <= parts[1].trim()) {
+                    const startTime = normalizeClockTime(parts[0]);
+                    const endTime = normalizeClockTime(parts[1]);
+                    if(currentWitaTimeStr >= startTime && currentWitaTimeStr <= endTime) {
                         isActiveNow = true;
                     }
                 }
@@ -1318,13 +1439,13 @@
                                     <div class="d-flex gap-1 mb-1 flex-wrap">
                                         <span class="badge badge-category bg-success text-white">${ev.category}</span>
                                         <span class="badge bg-${priorityColor}" style="font-size: 0.65rem;">Prioritas: ${ev.priority}</span>
-                                        ${isActiveNow ? `<span class="badge bg-danger text-white animate-pulse" style="font-size: 0.65rem;"><i class="fas fa-bolt me-1"></i> SEDANG BERLANGSUNG ⚡</span>` : ''}
-                                        ${isConflict ? `<span class="badge bg-danger text-white animate-pulse" style="font-size: 0.65rem;"><i class="fas fa-exclamation-triangle me-1"></i> Konflik Jam Bertumpuk (${timeSlotsMap[ev.time].length} Agenda)</span>` : ''}
+                                        ${isActiveNow ? `<span class="badge bg-danger text-white animate-pulse badge-active-now" style="font-size: 0.65rem;"><i class="fas fa-bolt me-1"></i> SEDANG BERLANGSUNG ⚡</span>` : ''}
+                                        ${isConflict ? `<span class="badge bg-danger text-white animate-pulse" style="font-size: 0.65rem;"><i class="fas fa-exclamation-triangle me-1"></i> Konflik Jam Bertumpuk (${timeSlotsMap[slotKey].length} Agenda)</span>` : ''}
                                         ${ev.type === 'proyek' ? `<span class="badge bg-info text-dark" style="font-size: 0.65rem;">Proyek Jangka Panjang</span>` : ''}
                                     </div>
                                     <h5 class="fw-bold text-light fs-6 mb-1">${ev.title}</h5>
                                     ${ev.desc ? `<p class="text-secondary small mb-1" style="font-size: 0.78rem;">${ev.desc}</p>` : ''}
-                                    <p class="text-secondary small mb-0" style="font-size: 0.75rem;"><i class="fas fa-clock text-success me-1"></i> ${ev.type === 'proyek' ? `Proyek (${ev.startDate} s/d${ev.endDate})` : ev.time} | <span class="badge bg-dark text-light border border-secondary">${ev.repeat}</span></p>
+                                    <p class="text-secondary small mb-0" style="font-size: 0.75rem;"><i class="fas fa-clock text-success me-1"></i> ${ev.type === 'proyek' ? `Proyek (${ev.startDate} s/d ${ev.endDate})` : ev.time} | <span class="badge bg-dark text-light border border-secondary">${ev.repeat}</span></p>
                                 </div>
                             </div>
                             <div class="d-flex gap-1" onclick="event.stopPropagation()">
@@ -1352,7 +1473,7 @@
                 return;
             }
 
-            const today = new Date();
+            const today = getWitaCurrentTime();
             projects.forEach(p => {
                 const start = new Date(p.startDate || p.date);
                 const end = new Date(p.endDate || p.date);
@@ -1459,17 +1580,19 @@
                 progressSec.classList.remove('d-none');
                 const start = new Date(ev.startDate);
                 const end = new Date(ev.endDate);
-                const today = new Date();
+                const today = getWitaCurrentTime();
                 const total = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
                 const elapsed = Math.max(0, Math.ceil((today - start) / (1000 * 60 * 60 * 24)));
                 let prog = Math.min(100, Math.round((elapsed / total) * 100));
                 if(today > end) prog = 100;
 
+                document.getElementById('detailDuration').innerText = `${total} Hari`;
                 document.getElementById('detailProgressText').innerText = `${prog}%`;
                 document.getElementById('detailProgressBar').style.width = `${prog}%`;
                 document.getElementById('detailProgressBar').style.backgroundColor = ev.color || '#10b981';
             } else {
                 progressSec.classList.add('d-none');
+                document.getElementById('detailDuration').innerText = '1 Hari';
             }
 
             document.getElementById('detailEditBtn').onclick = () => {
@@ -1560,21 +1683,24 @@
             const icon = document.getElementById('selectedIcon').value;
             const color = document.getElementById('selectedColor').value;
 
-            const targetDateObj = new Date(date);
+            const [y, m, d] = date.split('-').map(Number);
+            const targetDateObj = new Date(y, (m || 1) - 1, d || 1);
 
+            let savedRecord;
             if(editId) {
                 const idx = masterData.jadwal.findIndex(j => j.id == editId);
                 if(idx !== -1) {
-                    masterData.jadwal[idx] = {
+                    savedRecord = {
                         ...masterData.jadwal[idx],
                         title, category, priority, type, time, date, startDate, endDate, repeat, desc, icon, color,
                         year: targetDateObj.getFullYear(),
                         month: targetDateObj.getMonth() + 1,
                         week: getWeekNumber(targetDateObj)
                     };
+                    masterData.jadwal[idx] = savedRecord;
                 }
             } else {
-                const newSchedule = {
+                savedRecord = {
                     id: Date.now(),
                     title, category, priority, type, time, date, startDate, endDate, repeat, desc, icon, color,
                     year: targetDateObj.getFullYear(),
@@ -1582,32 +1708,48 @@
                     week: getWeekNumber(targetDateObj),
                     status: 'pending'
                 };
-                masterData.jadwal.unshift(newSchedule);
+                masterData.jadwal.unshift(savedRecord);
             }
 
             bootstrap.Modal.getInstance(document.getElementById('modalJadwal')).hide();
-            await saveMasterDataToCloud();
+            if (savedRecord) {
+                await upsertRowToSupabase(savedRecord);
+            }
         }
 
         async function deleteSchedule(id) {
             if(!confirm("Yakin ingin menghapus jadwal/proyek ini?")) return;
             masterData.jadwal = masterData.jadwal.filter(j => j.id !== id);
-            await saveMasterDataToCloud();
+            await deleteRowFromSupabase(id);
         }
 
         async function cleanExpiredSchedules() {
             const todayStr = getWitaDateString(getWitaCurrentTime());
-            const initialCount = masterData.jadwal.length;
-            masterData.jadwal = masterData.jadwal.filter(j => {
-                if(j.repeat === 'once' && (j.endDate || j.date) < todayStr) return false;
-                return true;
-            });
-            const removed = initialCount - masterData.jadwal.length;
-            if(removed > 0) {
-                await saveMasterDataToCloud();
-                showAlert(`Berhasil membersihkan ${removed} jadwal kedaluwarsa.`);
-            } else {
+            const expiredIds = masterData.jadwal
+                .filter(j => j.repeat === 'once' && (j.endDate || j.date) < todayStr)
+                .map(j => j.id);
+
+            if(expiredIds.length === 0) {
                 showAlert("Tidak ada jadwal kedaluwarsa.", "secondary");
+                return;
+            }
+
+            masterData.jadwal = masterData.jadwal.filter(j => !expiredIds.includes(j.id));
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(masterData));
+
+            showLoading(true);
+            try {
+                const { error } = await supabaseClient
+                    .from(TABLE_NAME)
+                    .delete()
+                    .in('id', expiredIds);
+                if (error) throw error;
+                showAlert(`Berhasil membersihkan ${expiredIds.length} jadwal kedaluwarsa.`);
+            } catch (err) {
+                showAlert("Gagal hapus di Supabase: " + err.message, "danger");
+            } finally {
+                showLoading(false);
+                renderApp();
             }
         }
 
@@ -1632,7 +1774,7 @@
             document.getElementById('alertMessage').innerText = msg;
             box.classList.add('show');
             box.classList.remove('d-none');
-            setTimeout(() => box.classList.add('d-none'), 4000);
+            setTimeout(() => box.classList.add('d-none'), 5000);
         }
 
         function showLoading(show) {
