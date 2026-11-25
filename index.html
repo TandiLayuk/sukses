@@ -713,6 +713,14 @@
                         <i class="fas fa-download me-1"></i> Instal Aplikasi
                     </button>
 
+                    <button id="browserNotifPermBtn" class="btn btn-outline-light btn-sm fw-bold rounded-pill px-3 shadow-sm" onclick="requestBrowserNotificationPermission()">
+                        <i class="fas fa-bell me-1"></i> <span id="browserNotifStatusText">Aktifkan Notif Browser</span>
+                    </button>
+
+                    <button class="btn btn-outline-warning btn-sm fw-bold rounded-pill px-3 shadow-sm" onclick="testBrowserNotificationManually()">
+                        <i class="fas fa-vial me-1"></i> Tes Notif Browser
+                    </button>
+
                     <button class="btn btn-warning btn-sm fw-bold rounded-pill px-3 shadow-sm text-dark" onclick="testSendWhatsAppManually()">
                         <i class="fas fa-paper-plane me-1"></i> Tes Kirim ke No. Cadangan
                     </button>
@@ -1081,6 +1089,8 @@
         const TARGET_WHATSAPP = "6281549506621"; 
         
         let notifiedWhatsAppEvents = {};
+        let notifiedBrowserEvents = {};
+        let swRegistration = null;
         let masterData = { setting: { owner: "Tika Tandi Layuk" }, jadwal: [] };
         let globalZoomLevel = 0.7;
         let deferredPrompt;
@@ -1088,9 +1098,121 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker terdaftar!', reg))
+                    .then(reg => {
+                        swRegistration = reg;
+                        console.log('Service Worker terdaftar!', reg);
+                    })
                     .catch(err => console.log('Service Worker gagal:', err));
             });
+        }
+
+        function updateBrowserNotifUi() {
+            const statusEl = document.getElementById('browserNotifStatusText');
+            const btnEl = document.getElementById('browserNotifPermBtn');
+            if (!statusEl || !btnEl) return;
+
+            if (!('Notification' in window)) {
+                statusEl.innerText = 'Notif Browser Tidak Didukung';
+                btnEl.classList.remove('btn-outline-light', 'btn-success');
+                btnEl.classList.add('btn-secondary');
+                return;
+            }
+
+            const perm = Notification.permission;
+            if (perm === 'granted') {
+                statusEl.innerText = 'Notif Browser Aktif';
+                btnEl.classList.remove('btn-outline-light', 'btn-outline-danger');
+                btnEl.classList.add('btn-success', 'text-white');
+            } else if (perm === 'denied') {
+                statusEl.innerText = 'Notif Diblokir Browser';
+                btnEl.classList.remove('btn-outline-light', 'btn-success');
+                btnEl.classList.add('btn-outline-danger');
+            } else {
+                statusEl.innerText = 'Aktifkan Notif Browser';
+                btnEl.classList.remove('btn-success', 'btn-outline-danger');
+                btnEl.classList.add('btn-outline-light');
+            }
+        }
+
+        async function requestBrowserNotificationPermission() {
+            if (!('Notification' in window)) {
+                showAlert('Browser ini tidak mendukung Web Notifications API.', 'warning');
+                return false;
+            }
+
+            if (Notification.permission === 'granted') {
+                updateBrowserNotifUi();
+                showAlert('Notifikasi browser sudah aktif!');
+                return true;
+            }
+
+            if (Notification.permission === 'denied') {
+                updateBrowserNotifUi();
+                showAlert('Izin notifikasi diblokir. Aktifkan lewat ikon gembok/pengaturan situs di browser.', 'warning');
+                return false;
+            }
+
+            try {
+                const permission = await Notification.requestPermission();
+                updateBrowserNotifUi();
+                if (permission === 'granted') {
+                    showAlert('Notifikasi browser berhasil diaktifkan!');
+                    return true;
+                } else {
+                    showAlert('Izin notifikasi browser belum diberikan.', 'warning');
+                    return false;
+                }
+            } catch (err) {
+                showAlert('Gagal meminta izin notifikasi browser: ' + err.message, 'danger');
+                return false;
+            }
+        }
+
+        async function triggerBrowserNotification(title, timeStr, category, scheduleId = null) {
+            if (!('Notification' in window)) return;
+
+            if (Notification.permission === 'default') {
+                const granted = await requestBrowserNotificationPermission();
+                if (!granted) return;
+            }
+
+            if (Notification.permission !== 'granted') return;
+
+            const notifTitle = `⏰ ${title}`;
+            const notifOptions = {
+                body: `${category} • ${timeStr} WITA`,
+                tag: `jadwal-${scheduleId || title}-${timeStr}`,
+                renotify: true,
+                icon: 'manifest.json',
+                data: { scheduleId: scheduleId }
+            };
+
+            try {
+                if (swRegistration && typeof swRegistration.showNotification === 'function') {
+                    await swRegistration.showNotification(notifTitle, notifOptions);
+                    return;
+                }
+            } catch (_) {
+                // Fallback ke konstruktor Notification standar jika SW tidak tersedia
+            }
+
+            try {
+                const n = new Notification(notifTitle, notifOptions);
+                n.onclick = () => {
+                    window.focus();
+                    if (scheduleId) {
+                        showDetailModal(Number(scheduleId));
+                    }
+                    n.close();
+                };
+            } catch (err) {
+                console.log('Gagal menampilkan notifikasi browser:', err);
+            }
+        }
+
+        async function testBrowserNotificationManually() {
+            playAlarmSound();
+            await triggerBrowserNotification('Uji Coba Notifikasi Browser', 'Sekarang', 'Pengembangan Diri', null);
         }
 
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -1151,6 +1273,7 @@
             document.getElementById('formStartDate').value = todayStr;
             document.getElementById('formEndDate').value = todayStr;
 
+            updateBrowserNotifUi();
             buildIconPicker();
             initDraggableClock();
             initClockOpacity();
@@ -1313,7 +1436,6 @@
             return currentMinutes >= startMin || currentMinutes <= endMin;
         }
 
-        // Koordinat jalur jalan kaki berkelok-kelok (0..1440 menit -> x: 60..2340, y: 78 +- 28)
         function getWindingPathPoint(minuteOfDay) {
             const clamped = Math.max(0, Math.min(1440, minuteOfDay));
             const ratio = clamped / 1440;
@@ -1391,7 +1513,6 @@
                 }).join('');
             }
 
-            // Gambar jalur setapak berkelok-kelok + jejak kaki terlewati
             const fullPathD = buildWindingFootpathSvgPath();
             const activeWalkMinutes = Math.max(0, Math.min(1440, currentTotalMinutes + witaNow.getSeconds() / 60));
             const activeRatio = activeWalkMinutes / 1440;
@@ -1402,7 +1523,6 @@
                 <path d="${fullPathD}" fill="none" stroke="#10b981" stroke-width="6" stroke-linecap="round" stroke-dasharray="${totalSvgLength}" stroke-dashoffset="${(totalSvgLength * (1 - activeRatio)).toFixed(1)}"></path>
             `;
 
-            // Jejeran ikon di pinggir jalur mewakili jam & jadwal
             const pinsHtml = [];
             for (let h = 0; h < 24; h++) {
                 const hourMinute = h * 60;
@@ -1442,7 +1562,6 @@
             }
             iconsLayer.innerHTML = pinsHtml.join('');
 
-            // Posisi marker menit berjalan di sepanjang jalur
             const walkerPt = getWindingPathPoint(activeWalkMinutes);
             walkerEl.style.left = `${walkerPt.x.toFixed(1)}px`;
             walkerEl.style.top = `${walkerPt.y.toFixed(1)}px`;
@@ -1464,6 +1583,21 @@
 
             const currentWitaDateStr = getWitaDateString(witaNow);
             const currentTimeStr = `${hours}:${minutes}`;
+
+            // Cek jadwal yang mulai tepat di menit ini untuk notifikasi browser
+            const todayEvents = masterData.jadwal.filter(j => isEventOnDate(j, currentWitaDateStr));
+            todayEvents.forEach(ev => {
+                if (ev.type !== 'proyek' && ev.time && ev.time.includes(' - ')) {
+                    const startTime = normalizeClockTime(ev.time.split(' - ')[0]);
+                    if (currentTimeStr === startTime) {
+                        const browserKey = `${currentWitaDateStr}-${startTime}-${ev.id || ev.title}`;
+                        if (!notifiedBrowserEvents[browserKey]) {
+                            notifiedBrowserEvents[browserKey] = true;
+                            triggerBrowserNotification(ev.title, ev.time, ev.category || 'Agenda', ev.id);
+                        }
+                    }
+                }
+            });
 
             document.querySelectorAll('.timeline-item').forEach(el => {
                 const timeLabel = el.getAttribute('data-time');
