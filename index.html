@@ -1081,7 +1081,9 @@
         const SUPABASE_URL = "https://gxdnhnjvyigtsinrvfht.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_mPnf3PmNV3yvarQrj5Mzqw_dkWnF0eB";
         const TABLE_NAME = "jadwal_pribadi";
+        const PUSH_TABLE_NAME = "push_subscriptions";
         const LOCAL_STORAGE_KEY = "jadwal_supabase_cache_v1";
+        const VAPID_PUBLIC_KEY = "BAXuurt0CeOcj5TpHIWlqNtZgzBmeTvzZvPrg3VA0EWA03cY69Y_rRKjCtBx5w1N_Wwb_fxufRayM2b6gUF3I0E";
 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -1095,14 +1097,85 @@
         let globalZoomLevel = 0.7;
         let deferredPrompt;
 
+        function urlBase64ToUint8Array(base64String) {
+            const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+            const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        async function savePushSubscriptionToSupabase(subscription) {
+            const json = subscription.toJSON();
+            const keys = json.keys || {};
+            if (!json.endpoint || !keys.p256dh || !keys.auth) return false;
+
+            const row = {
+                endpoint: json.endpoint,
+                p256dh: keys.p256dh,
+                auth: keys.auth,
+                timezone: "Asia/Makassar",
+                user_agent: navigator.userAgent
+            };
+
+            const { error } = await supabaseClient
+                .from(PUSH_TABLE_NAME)
+                .upsert(row, { onConflict: "endpoint" });
+
+            if (error) {
+                console.error("Gagal simpan push subscription ke Supabase:", error.message);
+                showAlert("Gagal simpan langganan push ke Supabase: " + error.message, "danger");
+                return false;
+            }
+            return true;
+        }
+
+        async function subscribeUserToWebPush() {
+            if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+                showAlert("Perangkat/browser ini tidak mendukung Web Push.", "warning");
+                return null;
+            }
+
+            try {
+                const reg = swRegistration || (await navigator.serviceWorker.ready);
+                let sub = await reg.pushManager.getSubscription();
+
+                if (!sub) {
+                    sub = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                    });
+                }
+
+                await savePushSubscriptionToSupabase(sub);
+                return sub;
+            } catch (err) {
+                console.error("Gagal subscribe Web Push:", err);
+                showAlert("Gagal mendaftarkan Web Push: " + err.message, "danger");
+                return null;
+            }
+        }
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
-                    .then(reg => {
+                    .then(async reg => {
                         swRegistration = reg;
                         console.log('Service Worker terdaftar!', reg);
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            await subscribeUserToWebPush();
+                        }
                     })
                     .catch(err => console.log('Service Worker gagal:', err));
+            });
+
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'OPEN_SCHEDULE_DETAIL' && event.data.scheduleId) {
+                    showDetailModal(Number(event.data.scheduleId));
+                }
             });
         }
 
@@ -1140,12 +1213,6 @@
                 return false;
             }
 
-            if (Notification.permission === 'granted') {
-                updateBrowserNotifUi();
-                showAlert('Notifikasi browser sudah aktif!');
-                return true;
-            }
-
             if (Notification.permission === 'denied') {
                 updateBrowserNotifUi();
                 showAlert('Izin notifikasi diblokir. Aktifkan lewat ikon gembok/pengaturan situs di browser.', 'warning');
@@ -1153,10 +1220,14 @@
             }
 
             try {
-                const permission = await Notification.requestPermission();
+                let permission = Notification.permission;
+                if (permission === 'default') {
+                    permission = await Notification.requestPermission();
+                }
                 updateBrowserNotifUi();
                 if (permission === 'granted') {
-                    showAlert('Notifikasi browser berhasil diaktifkan!');
+                    await subscribeUserToWebPush();
+                    showAlert('Notifikasi & Web Push aktif serta tersimpan ke Supabase!');
                     return true;
                 } else {
                     showAlert('Izin notifikasi browser belum diberikan.', 'warning');
@@ -1278,6 +1349,12 @@
             initDraggableClock();
             initClockOpacity();
             await fetchMasterData();
+
+            const params = new URLSearchParams(window.location.search);
+            const scheduleIdFromUrl = params.get('scheduleId');
+            if (scheduleIdFromUrl) {
+                setTimeout(() => showDetailModal(Number(scheduleIdFromUrl)), 600);
+            }
 
             setInterval(updateWitaClockAndActiveSchedules, 1000);
             updateWitaClockAndActiveSchedules();
@@ -1584,7 +1661,7 @@
             const currentWitaDateStr = getWitaDateString(witaNow);
             const currentTimeStr = `${hours}:${minutes}`;
 
-            // Cek jadwal yang mulai tepat di menit ini untuk notifikasi browser
+            // Cek jadwal yang mulai tepat di menit ini untuk notifikasi browser saat tab aktif
             const todayEvents = masterData.jadwal.filter(j => isEventOnDate(j, currentWitaDateStr));
             todayEvents.forEach(ev => {
                 if (ev.type !== 'proyek' && ev.time && ev.time.includes(' - ')) {
