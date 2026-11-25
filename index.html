@@ -24,6 +24,8 @@
         :root {
             --primary-gradient: linear-gradient(135deg, #09090b 0%, #18181b 50%, #27272a 100%);
             --accent-color: #10b981;
+            --active-accent: #f59e0b;
+            --active-soft: #fbbf24;
             --dark-bg: #09090b;
             --card-bg: rgba(24, 24, 27, 0.88);
             --border-color: rgba(255, 255, 255, 0.12);
@@ -55,10 +57,16 @@
             100% { box-shadow: 0 0 5px var(--accent-color); }
         }
 
-        @keyframes activeGlow {
-            0% { box-shadow: 0 0 10px #ef4444; border-color: #ef4444; transform: scale(1); }
-            50% { box-shadow: 0 0 25px #ef4444; border-color: #f87171; transform: scale(1.02); }
-            100% { box-shadow: 0 0 10px #ef4444; border-color: #ef4444; transform: scale(1); }
+        @keyframes activeWarmGlow {
+            0% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.35); border-color: rgba(251, 191, 36, 0.65); }
+            50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); border-color: #fbbf24; }
+            100% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.35); border-color: rgba(251, 191, 36, 0.65); }
+        }
+
+        @keyframes sparkleDotFloat {
+            0% { transform: translateY(6px) scale(0.5); opacity: 0; }
+            45% { opacity: 0.95; transform: translateY(-4px) scale(1.15); }
+            100% { transform: translateY(-16px) scale(0.4); opacity: 0; }
         }
 
         @keyframes particleFloat {
@@ -114,11 +122,221 @@
         }
 
         .timeline-item.active-now {
-            border-left: 5px solid #ef4444 !important;
-            background: rgba(239, 68, 68, 0.08) !important;
-            animation: activeGlow 2s infinite;
+            border-left: 5px solid var(--active-accent) !important;
+            background: rgba(245, 158, 11, 0.1) !important;
+            animation: activeWarmGlow 2.4s infinite;
             border-radius: 4px 12px 12px 4px;
             padding-left: 16px;
+        }
+
+        /* Banner Jadwal Sedang Berjalan (Baris Kedua di Atas) */
+        .running-schedule-banner {
+            position: relative;
+            overflow: hidden;
+            border-left: 4px solid var(--active-accent);
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.14) 0%, rgba(16, 185, 129, 0.06) 45%, rgba(24, 24, 27, 0.94) 100%);
+        }
+
+        /* Animasi Butiran pada Banner & Kartu Jadwal Aktif */
+        .sparkle-dots-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .sparkle-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--active-soft);
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.85);
+            animation: sparkleDotFloat 2.8s infinite ease-in-out;
+        }
+        .sparkle-dot:nth-child(even) {
+            background: var(--accent-color);
+            box-shadow: 0 0 8px var(--accent-color);
+            width: 5px;
+            height: 5px;
+        }
+        .sparkle-dot:nth-child(1) { left: 8%; top: 24%; animation-delay: 0s; }
+        .sparkle-dot:nth-child(2) { left: 22%; top: 65%; animation-delay: 0.45s; }
+        .sparkle-dot:nth-child(3) { left: 37%; top: 30%; animation-delay: 0.9s; }
+        .sparkle-dot:nth-child(4) { left: 53%; top: 72%; animation-delay: 1.35s; }
+        .sparkle-dot:nth-child(5) { left: 69%; top: 26%; animation-delay: 1.8s; }
+        .sparkle-dot:nth-child(6) { left: 84%; top: 62%; animation-delay: 2.25s; }
+
+        .running-banner-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .running-item-card {
+            position: relative;
+            overflow: hidden;
+            background: rgba(24, 24, 27, 0.92);
+            border: 1.5px solid rgba(251, 191, 36, 0.55);
+            border-radius: 14px;
+            padding: 13px 16px;
+            cursor: pointer;
+            transition: all 0.22s ease;
+            animation: activeWarmGlow 2.8s infinite;
+        }
+        .running-item-card:hover {
+            background: rgba(245, 158, 11, 0.14);
+            transform: translateY(-2px);
+        }
+        .running-item-title {
+            font-size: 1.08rem;
+            font-weight: 800;
+            line-height: 1.3;
+            color: #ffffff;
+        }
+        .running-item-time {
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #fde68a;
+        }
+        .running-item-cat {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        .card-mini-dots {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            pointer-events: none;
+        }
+        .card-mini-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--active-soft);
+            animation: sparkleDotFloat 2.1s infinite ease-in-out;
+        }
+        .card-mini-dot:nth-child(2) {
+            background: var(--accent-color);
+            animation-delay: 0.5s;
+        }
+        .card-mini-dot:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        /* Jalur Perjalanan Kaki Berkelok-kelok + Jejeran Ikon di Pinggir */
+        .winding-path-scroll {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 6px 2px 10px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-color) transparent;
+        }
+        .winding-path-scroll::-webkit-scrollbar { height: 6px; }
+        .winding-path-scroll::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 999px; }
+
+        .winding-path-stage {
+            position: relative;
+            width: 2400px;
+            height: 156px;
+            user-select: none;
+        }
+
+        .winding-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2400px;
+            height: 156px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .edge-icon-pin {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            transition: transform 0.2s ease;
+        }
+        .edge-icon-pin.clickable { cursor: pointer; }
+        .edge-icon-pin.clickable:hover { transform: translate(-50%, -50%) scale(1.12); }
+
+        .edge-icon-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.74rem;
+            color: #ffffff;
+            background: rgba(24, 24, 27, 0.95);
+            border: 1.5px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+        }
+        .edge-icon-pin.is-passed .edge-icon-badge {
+            border-color: var(--accent-color);
+            color: #6ee7b7;
+        }
+        .edge-icon-pin.is-current .edge-icon-badge {
+            background: var(--active-accent);
+            border-color: #fef08a;
+            color: #18181b;
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.85);
+        }
+
+        .edge-icon-time {
+            font-size: 0.6rem;
+            font-family: monospace;
+            font-weight: 700;
+            color: #cbd5e1;
+            background: rgba(9, 9, 11, 0.82);
+            padding: 0 5px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .walker-position-marker {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .walker-avatar-circle {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--active-accent);
+            border: 2.5px solid #ffffff;
+            color: #18181b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            box-shadow: 0 0 18px rgba(245, 158, 11, 0.9);
+        }
+        .walker-minute-pill {
+            margin-top: 2px;
+            background: var(--active-accent);
+            color: #18181b;
+            font-size: 0.58rem;
+            font-weight: 800;
+            font-family: monospace;
+            padding: 1px 6px;
+            border-radius: 999px;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
         }
 
         #appZoomWrapper {
@@ -437,6 +655,13 @@
             background: rgba(9, 9, 11, 0.9); z-index: 9999;
             display: flex; justify-content: center; align-items: center;
         }
+        .clock-opacity-slider {
+            width: 68px;
+            height: 4px;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body class="theme-neon">
@@ -447,6 +672,11 @@
         <div>
             <div class="time-text" id="floatingWitaClock">00:00:00 WITA</div>
             <div class="date-text" id="floatingWitaDate">Memuat Tanggal...</div>
+            <div class="d-flex align-items-center gap-1 mt-1" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+                <i class="fas fa-adjust text-secondary" style="font-size: 0.65rem;" title="Transparansi"></i>
+                <input type="range" id="clockOpacityRange" class="clock-opacity-slider" min="0.2" max="1" step="0.05" value="0.95" oninput="setClockOpacity(this.value)">
+                <span id="clockOpacityLabel" class="text-secondary" style="font-size: 0.6rem; font-family: monospace;">95%</span>
+            </div>
         </div>
     </div>
 
@@ -524,6 +754,53 @@
             
             <div id="alertBox" class="alert alert-success d-none shadow-sm mb-3">
                 <i class="fas fa-check-circle me-2"></i><span id="alertMessage">Berhasil memperbarui data!</span>
+            </div>
+
+            <!-- Baris Kedua di Atas: Jadwal Yang Sedang Berjalan + Jalur Kaki Berkelok-kelok & Ikon di Pinggir -->
+            <div id="activeRunningTopBar" class="card-custom running-schedule-banner p-3 p-md-4 mb-3">
+                <div class="sparkle-dots-layer" aria-hidden="true">
+                    <span class="sparkle-dot"></span>
+                    <span class="sparkle-dot"></span>
+                    <span class="sparkle-dot"></span>
+                    <span class="sparkle-dot"></span>
+                    <span class="sparkle-dot"></span>
+                    <span class="sparkle-dot"></span>
+                </div>
+
+                <div class="running-banner-content">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="badge bg-warning text-dark fw-extrabold px-3 py-1.5 rounded-pill shadow-sm" style="font-size: 0.78rem;">
+                                <i class="fas fa-sparkles me-1"></i> SEDANG BERLANGSUNG
+                            </span>
+                            <span class="fw-extrabold text-light fs-6" id="runningBarTitle">Memeriksa agenda aktif WITA...</span>
+                        </div>
+                        <span class="badge bg-dark text-warning border border-warning border-opacity-50 px-3 py-1.5 rounded-pill font-monospace" style="font-size: 0.78rem;" id="runningRoutePositionLabel">Posisi Menit: --:--</span>
+                    </div>
+
+                    <div id="runningSchedulesList" class="row g-2 mb-3"></div>
+
+                    <div class="pt-2 border-top border-secondary border-opacity-25">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-1 mb-1">
+                            <span class="text-light fw-bold" style="font-size: 0.78rem;">
+                                <i class="fas fa-shoe-prints text-success me-1"></i> Jalur Perjalanan Kaki Berkelok-kelok (00:00 – 23:59, Ikon Jam di Pinggir)
+                            </span>
+                            <span class="text-secondary" style="font-size: 0.7rem;">
+                                Geser bebas secara manual &bull; <i class="fas fa-shoe-prints text-warning me-1"></i>Posisi Menit Berjalan
+                            </span>
+                        </div>
+                        <div class="winding-path-scroll" id="windingPathScrollContainer">
+                            <div class="winding-path-stage" id="windingPathStage">
+                                <svg class="winding-svg" id="windingFootpathSvg" viewBox="0 0 2400 156" preserveAspectRatio="none"></svg>
+                                <div id="windingEdgeIconsLayer"></div>
+                                <div class="walker-position-marker" id="walkerPositionMarker" style="left: 60px; top: 78px;">
+                                    <div class="walker-avatar-circle"><i class="fas fa-shoe-prints"></i></div>
+                                    <div class="walker-minute-pill" id="walkerMinutePill">00:00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="card-custom p-3 mb-3">
@@ -855,7 +1132,7 @@
             "fa-desktop", "fa-tablet-alt", "fa-mobile-alt", "fa-print", "fa-calculator", "fa-folder", "fa-file-alt", "fa-archive"
         ];
 
-        const colorPaletteList = ["#10b981", "#3b82f6", "#8b5cf6", "#f97316", "#ef4444", "#ec4899", "#14b8a6", "#38bdf8", "#fbbf24", "#a855f7"];
+        const colorPaletteList = ["#10b981", "#3b82f6", "#8b5cf6", "#f97316", "#f59e0b", "#ec4899", "#14b8a6", "#38bdf8", "#fbbf24", "#a855f7"];
 
         document.addEventListener("DOMContentLoaded", async () => {
             const savedTheme = localStorage.getItem('app_theme') || 'theme-neon';
@@ -876,11 +1153,30 @@
 
             buildIconPicker();
             initDraggableClock();
+            initClockOpacity();
             await fetchMasterData();
 
             setInterval(updateWitaClockAndActiveSchedules, 1000);
             updateWitaClockAndActiveSchedules();
         });
+
+        function setClockOpacity(val) {
+            const num = Math.min(1, Math.max(0.2, parseFloat(val) || 0.95));
+            const widget = document.getElementById('floatingClockWidget');
+            const slider = document.getElementById('clockOpacityRange');
+            const label = document.getElementById('clockOpacityLabel');
+
+            if (widget) widget.style.opacity = num;
+            if (slider) slider.value = num;
+            if (label) label.innerText = `${Math.round(num * 100)}%`;
+
+            localStorage.setItem('clock_widget_opacity', String(num));
+        }
+
+        function initClockOpacity() {
+            const saved = localStorage.getItem('clock_widget_opacity') || '0.95';
+            setClockOpacity(saved);
+        }
 
         function initDraggableClock() {
             const clockWidget = document.getElementById('floatingClockWidget');
@@ -896,6 +1192,7 @@
             document.addEventListener('touchend', dragEnd);
 
             function dragStart(e) {
+                if (e.target && e.target.closest('input')) return;
                 isDragging = true;
                 const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
                 const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
@@ -995,6 +1292,163 @@
             return `${String(parseInt(h, 10) || 0).padStart(2, '0')}:${String(parseInt(m, 10) || 0).padStart(2, '0')}`;
         }
 
+        function timeToMinutes(hhmm) {
+            const norm = normalizeClockTime(hhmm);
+            if (!norm.includes(':')) return null;
+            const [h, m] = norm.split(':').map(Number);
+            if (Number.isNaN(h) || Number.isNaN(m)) return null;
+            return h * 60 + m;
+        }
+
+        function isScheduleRunningAtTime(ev, currentMinutes) {
+            if (!ev || ev.type === 'proyek' || !ev.time || !ev.time.includes(' - ')) return false;
+            const [rawStart, rawEnd] = ev.time.split(' - ');
+            const startMin = timeToMinutes(rawStart);
+            const endMin = timeToMinutes(rawEnd);
+            if (startMin === null || endMin === null) return false;
+
+            if (endMin >= startMin) {
+                return currentMinutes >= startMin && currentMinutes <= endMin;
+            }
+            return currentMinutes >= startMin || currentMinutes <= endMin;
+        }
+
+        // Koordinat jalur jalan kaki berkelok-kelok (0..1440 menit -> x: 60..2340, y: 78 +- 28)
+        function getWindingPathPoint(minuteOfDay) {
+            const clamped = Math.max(0, Math.min(1440, minuteOfDay));
+            const ratio = clamped / 1440;
+            const x = 60 + ratio * 2280;
+            const y = 78 + Math.sin(ratio * Math.PI * 12) * 28;
+            return { x, y };
+        }
+
+        function buildWindingFootpathSvgPath() {
+            const parts = [];
+            for (let m = 0; m <= 1440; m += 10) {
+                const pt = getWindingPathPoint(m);
+                parts.push(`${m === 0 ? 'M' : 'L'} ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`);
+            }
+            return parts.join(' ');
+        }
+
+        function renderRunningTopBarAndRoute(witaNow) {
+            const listContainer = document.getElementById('runningSchedulesList');
+            const svgEl = document.getElementById('windingFootpathSvg');
+            const iconsLayer = document.getElementById('windingEdgeIconsLayer');
+            const walkerEl = document.getElementById('walkerPositionMarker');
+            const walkerPill = document.getElementById('walkerMinutePill');
+            const barTitle = document.getElementById('runningBarTitle');
+            const posLabel = document.getElementById('runningRoutePositionLabel');
+
+            if (!listContainer || !svgEl || !iconsLayer || !walkerEl || !walkerPill || !barTitle || !posLabel) return;
+
+            const todayStr = getWitaDateString(witaNow);
+            const curHour = witaNow.getHours();
+            const curMin = witaNow.getMinutes();
+            const currentTotalMinutes = curHour * 60 + curMin;
+            const formattedNow = `${String(curHour).padStart(2, '0')}:${String(curMin).padStart(2, '0')}`;
+
+            const todayEvents = masterData.jadwal.filter(j => isEventOnDate(j, todayStr));
+            const runningEvents = todayEvents.filter(ev => isScheduleRunningAtTime(ev, currentTotalMinutes));
+
+            posLabel.innerText = `Posisi Menit: ${formattedNow} WITA`;
+
+            if (runningEvents.length === 0) {
+                barTitle.innerText = `Tidak ada jadwal jam aktif saat ini (${todayStr})`;
+                listContainer.innerHTML = `
+                    <div class="col-12">
+                        <div class="text-light fw-semibold py-1" style="font-size: 0.92rem;">
+                            Belum ada jadwal yang sedang berjalan di jam ini — posisi kaki di jalur berkelok menunjukkan menit berjalan.
+                        </div>
+                    </div>
+                `;
+            } else {
+                barTitle.innerText = `${runningEvents.length} Jadwal Sedang Berjalan Sekarang`;
+                listContainer.innerHTML = runningEvents.map(ev => {
+                    const color = ev.color || '#fbbf24';
+                    return `
+                        <div class="col-md-6 col-lg-4">
+                            <div class="running-item-card d-flex align-items-center gap-3" onclick="showDetailModal(${ev.id})">
+                                <div class="card-mini-dots" aria-hidden="true">
+                                    <span class="card-mini-dot"></span>
+                                    <span class="card-mini-dot"></span>
+                                    <span class="card-mini-dot"></span>
+                                </div>
+                                <div class="fs-2 flex-shrink-0" style="color: ${color};">
+                                    <i class="fas ${ev.icon || 'fa-calendar-day'}"></i>
+                                </div>
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                        <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.7rem;"><i class="fas fa-sparkles me-1"></i>AKTIF</span>
+                                        <span class="running-item-time"><i class="fas fa-clock me-1"></i>${ev.time}</span>
+                                    </div>
+                                    <div class="running-item-title text-truncate">${ev.title}</div>
+                                    <div class="running-item-cat mt-0.5">${ev.category}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Gambar jalur setapak berkelok-kelok + jejak kaki terlewati
+            const fullPathD = buildWindingFootpathSvgPath();
+            const activeWalkMinutes = Math.max(0, Math.min(1440, currentTotalMinutes + witaNow.getSeconds() / 60));
+            const activeRatio = activeWalkMinutes / 1440;
+            const totalSvgLength = 2400 * 1.15;
+
+            svgEl.innerHTML = `
+                <path d="${fullPathD}" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="6" stroke-linecap="round" stroke-dasharray="10 8"></path>
+                <path d="${fullPathD}" fill="none" stroke="#10b981" stroke-width="6" stroke-linecap="round" stroke-dasharray="${totalSvgLength}" stroke-dashoffset="${(totalSvgLength * (1 - activeRatio)).toFixed(1)}"></path>
+            `;
+
+            // Jejeran ikon di pinggir jalur mewakili jam & jadwal
+            const pinsHtml = [];
+            for (let h = 0; h < 24; h++) {
+                const hourMinute = h * 60;
+                const pt = getWindingPathPoint(hourMinute);
+                const slotEndMin = hourMinute + 59;
+
+                const matchingEvents = todayEvents.filter(ev => {
+                    if (ev.type === 'proyek' || !ev.time || !ev.time.includes(' - ')) return false;
+                    const [sRaw, eRaw] = ev.time.split(' - ');
+                    const sMin = timeToMinutes(sRaw);
+                    const eMin = timeToMinutes(eRaw);
+                    if (sMin === null || eMin === null) return false;
+                    if (eMin >= sMin) {
+                        return sMin <= slotEndMin && eMin >= hourMinute;
+                    }
+                    return slotEndMin >= sMin || hourMinute <= eMin;
+                });
+
+                const firstEv = matchingEvents[0];
+                const isCurrent = h === curHour;
+                const isPassed = h < curHour;
+                const pinSideOffset = (h % 2 === 0) ? -34 : 34;
+                const pinY = Math.max(24, Math.min(132, pt.y + pinSideOffset));
+
+                const iconClass = firstEv ? (firstEv.icon || 'fa-calendar-check') : (isCurrent ? 'fa-location-dot' : (isPassed ? 'fa-check' : 'fa-clock'));
+                const badgeBg = isCurrent ? '#f59e0b' : (firstEv ? (firstEv.color || '#10b981') : 'rgba(24, 24, 27, 0.95)');
+                const clickAttrs = firstEv ? `onclick="showDetailModal(${firstEv.id})" title="${firstEv.title} (${firstEv.time})"` : `title="${String(h).padStart(2, '0')}:00 WITA"`;
+
+                pinsHtml.push(`
+                    <div class="edge-icon-pin ${firstEv ? 'clickable' : ''} ${isPassed ? 'is-passed' : ''} ${isCurrent ? 'is-current' : ''}" style="left: ${pt.x.toFixed(1)}px; top: ${pinY.toFixed(1)}px;" ${clickAttrs}>
+                        <div class="edge-icon-badge" style="background: ${badgeBg};">
+                            <i class="fas ${iconClass}"></i>
+                        </div>
+                        <span class="edge-icon-time">${String(h).padStart(2, '0')}:00</span>
+                    </div>
+                `);
+            }
+            iconsLayer.innerHTML = pinsHtml.join('');
+
+            // Posisi marker menit berjalan di sepanjang jalur
+            const walkerPt = getWindingPathPoint(activeWalkMinutes);
+            walkerEl.style.left = `${walkerPt.x.toFixed(1)}px`;
+            walkerEl.style.top = `${walkerPt.y.toFixed(1)}px`;
+            walkerPill.innerText = `${formattedNow}:${String(witaNow.getSeconds()).padStart(2, '0')}`;
+        }
+
         function updateWitaClockAndActiveSchedules() {
             const witaNow = getWitaCurrentTime();
             const hours = String(witaNow.getHours()).padStart(2, '0');
@@ -1005,6 +1459,8 @@
             
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('floatingWitaDate').innerText = witaNow.toLocaleDateString('id-ID', options);
+
+            renderRunningTopBarAndRoute(witaNow);
 
             const currentWitaDateStr = getWitaDateString(witaNow);
             const currentTimeStr = `${hours}:${minutes}`;
@@ -1032,7 +1488,7 @@
                         el.classList.add('active-now');
                         const badgeContainer = el.querySelector('.d-flex.gap-1.mb-1');
                         if(badgeContainer && !badgeContainer.querySelector('.badge-active-now')) {
-                            badgeContainer.innerHTML += `<span class="badge bg-danger text-white animate-pulse badge-active-now" style="font-size: 0.65rem;"><i class="fas fa-bolt me-1"></i> SEDANG BERLANGSUNG ⚡</span>`;
+                            badgeContainer.innerHTML += `<span class="badge bg-warning text-dark fw-bold badge-active-now" style="font-size: 0.72rem;"><i class="fas fa-sparkles me-1"></i> SEDANG BERLANGSUNG</span>`;
                         }
                     } else {
                         el.classList.remove('active-now');
@@ -1269,6 +1725,7 @@
         }
 
         function renderApp() {
+            renderRunningTopBarAndRoute(getWitaCurrentTime());
             renderCalendarView();
             renderDailyView();
             renderProjectsView();
@@ -1414,7 +1871,7 @@
             const currentWitaTimeStr = `${String(witaNow.getHours()).padStart(2, '0')}:${String(witaNow.getMinutes()).padStart(2, '0')}`;
 
             dayEvents.forEach(ev => {
-                const priorityColor = ev.priority === 'Tinggi' ? 'danger' : ev.priority === 'Sedang' ? 'warning text-dark' : 'secondary';
+                const priorityColor = ev.priority === 'Tinggi' ? 'warning text-dark' : ev.priority === 'Sedang' ? 'info text-dark' : 'secondary';
                 const iconColorStyle = ev.color ? `color: ${ev.color};` : '';
                 
                 const slotKey = normalizeClockTime((ev.time || '').split(' - ')[0]) + '-' + normalizeClockTime((ev.time || '').split(' - ')[1] || '');
@@ -1439,11 +1896,11 @@
                                     <div class="d-flex gap-1 mb-1 flex-wrap">
                                         <span class="badge badge-category bg-success text-white">${ev.category}</span>
                                         <span class="badge bg-${priorityColor}" style="font-size: 0.65rem;">Prioritas: ${ev.priority}</span>
-                                        ${isActiveNow ? `<span class="badge bg-danger text-white animate-pulse badge-active-now" style="font-size: 0.65rem;"><i class="fas fa-bolt me-1"></i> SEDANG BERLANGSUNG ⚡</span>` : ''}
-                                        ${isConflict ? `<span class="badge bg-danger text-white animate-pulse" style="font-size: 0.65rem;"><i class="fas fa-exclamation-triangle me-1"></i> Konflik Jam Bertumpuk (${timeSlotsMap[slotKey].length} Agenda)</span>` : ''}
+                                        ${isActiveNow ? `<span class="badge bg-warning text-dark fw-bold badge-active-now" style="font-size: 0.72rem;"><i class="fas fa-sparkles me-1"></i> SEDANG BERLANGSUNG</span>` : ''}
+                                        ${isConflict ? `<span class="badge bg-warning text-dark fw-bold" style="font-size: 0.65rem;"><i class="fas fa-layer-group me-1"></i> Jadwal Bertumpuk (${timeSlotsMap[slotKey].length} Agenda)</span>` : ''}
                                         ${ev.type === 'proyek' ? `<span class="badge bg-info text-dark" style="font-size: 0.65rem;">Proyek Jangka Panjang</span>` : ''}
                                     </div>
-                                    <h5 class="fw-bold text-light fs-6 mb-1">${ev.title}</h5>
+                                    <h5 class="fw-bold text-light ${isActiveNow ? 'fs-5' : 'fs-6'} mb-1">${ev.title}</h5>
                                     ${ev.desc ? `<p class="text-secondary small mb-1" style="font-size: 0.78rem;">${ev.desc}</p>` : ''}
                                     <p class="text-secondary small mb-0" style="font-size: 0.75rem;"><i class="fas fa-clock text-success me-1"></i> ${ev.type === 'proyek' ? `Proyek (${ev.startDate} s/d ${ev.endDate})` : ev.time} | <span class="badge bg-dark text-light border border-secondary">${ev.repeat}</span></p>
                                 </div>
@@ -1521,7 +1978,7 @@
 
             priorities.forEach(pri => {
                 const items = masterData.jadwal.filter(j => (j.priority || 'Sedang') === pri);
-                const badgeColor = pri === 'Tinggi' ? 'danger' : pri === 'Sedang' ? 'warning text-dark' : 'secondary';
+                const badgeColor = pri === 'Tinggi' ? 'warning text-dark' : pri === 'Sedang' ? 'info text-dark' : 'secondary';
                 let itemsHtml = '';
 
                 if(items.length === 0) {
